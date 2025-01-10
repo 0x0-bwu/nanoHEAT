@@ -1,0 +1,4 @@
+[submodule "3rdparty/nanoDB"]
+	path = 3rdparty/nanoDB
+	url = https://github.com/0x0-bwu/nanoDB.git
+	branch = main
