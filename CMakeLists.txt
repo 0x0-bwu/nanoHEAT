@@ -149,6 +149,7 @@ else()
 endif()
 
 # Find package
+find_package(PNG REQUIRED)
 find_package(Threads REQUIRED)
 
 find_package(OpenMP)
@@ -163,7 +164,16 @@ set(THIRD_LIBRARY_PATH ${PROJECT_SOURCE_DIR}/3rdparty)
 set(NANO_DB_SRC_PATH ${THIRD_LIBRARY_PATH}/nanoDB/src)
 set(NANO_DB_INCLUDE_PATH ${THIRD_LIBRARY_PATH}/nanoDB/include)
 set(GENERIC_INCLUDE_PATH ${THIRD_LIBRARY_PATH}/generic/include)
-include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/include ${NANO_DB_SRC_PATH} ${NANO_DB_INCLUDE_PATH} ${GENERIC_INCLUDE_PATH} ${BOOST_INCLUDE_PATH})
+include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/include ${NANO_DB_INCLUDE_PATH} ${GENERIC_INCLUDE_PATH} ${BOOST_INCLUDE_PATH} ${PNG_INCLUDE_DIR})
+
+# Compile definition
+add_compile_definitions(GENERIC_BOOST_GIL_IO_PNG_SUPPORT)
+add_compile_definitions(NANO_BOOST_SERIALIZATION_SUPPORT)
+
+option(BUILD_NANODB_FROM_SRC "Build db module from source" ON)
+if (BUILD_NANODB_FROM_SRC)
+    include_directories(${NANO_DB_SRC_PATH})
+endif()
 
 # Message
 message(STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
