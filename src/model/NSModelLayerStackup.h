@@ -61,7 +61,7 @@ public:
     struct BondingWire
     {
         Float radius{0};
-        Float current{INVALID_ID};
+        Float current{0};
         IdType netId{INVALID_ID};
         IdType matId{INVALID_ID};
         ScenarioId scenario;
