@@ -39,10 +39,10 @@ public:
     {
         IdType polygon{std::numeric_limits<IdType>::max()};
         LayerRange range;
-        ScenarioId scenario;
-        SPtr<Lut1D> power{nullptr};
-        PowerBlock(IdType polygon, LayerRange range, ScenarioId scenario, SPtr<Lut1D> power)
-         : polygon(polygon), range(range), scenario(scenario), power(power) {}
+        ScenarioId scen;
+        IdType powerLut;
+        PowerBlock(IdType polygon, LayerRange range, ScenarioId scenario, IdType powerLut)
+         : polygon(polygon), range(range), scen(scenario), powerLut(powerLut) {}
         PowerBlock() = default;
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
@@ -50,10 +50,10 @@ public:
     void serialize(Archive & ar, const unsigned int version)
     {
         NS_UNUSED(version);
-        ar & boost::serialization::make_nvp("polygon" , polygon );
-        ar & boost::serialization::make_nvp("range"   , range   );
-        ar & boost::serialization::make_nvp("scenario", scenario);
-        ar & boost::serialization::make_nvp("power"   , power   );
+        ar & boost::serialization::make_nvp("polygon"  , polygon );
+        ar & boost::serialization::make_nvp("range"    , range   );
+        ar & boost::serialization::make_nvp("scenario" , scen    );
+        ar & boost::serialization::make_nvp("power_lut", powerLut);
     }
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
     };

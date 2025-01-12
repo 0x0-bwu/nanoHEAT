@@ -22,17 +22,14 @@ public:
 
 private:
 
-    IdType AddPolygon(IdType netId, IdType matId, NPlygon polygon, bool isHole, Float elevation, Float thickness);
-    void AddShape(IdType netId, EMaterialId solidMat, EMaterialId holeMat, CPtr<EShape> shape, EFloat elevation, EFloat thickness);
-    // bool AddPowerBlock(EMaterialId matId, EPolygonData polygon,  EScenarioId scen, SPtr<ELookupTable1D> power, EFloat elevation, EFloat thickness, EFloat pwrPosition = 0.1, EFloat pwrThickness = 0.1);
+    IdType AddPolygon(IdType netId, IdType matId, NPolygon polygon, bool isHole, Float elevation, Float thickness);
+    void AddShape(IdType netId, IdType solidMat, IdType holeMat, CId<Shape> shape, Float elevation, Float thickness);
+    bool AddPowerBlock(IdType matId, NPolygon polygon, ScenarioId scen, IdType powerLut, Float elevation, Float thickness, Float pwrPosition = 0.1, Float pwrThickness = 0.1);
     void AddComponent(CId<Component> component);
-    // void AddBondwire(ELayerCutModel::Bondwire bw);
-    // void AddImprintBox(const EBox2D & box);
-    // CPtr<LayoutRetriever> GetLayoutRetriever() const; 
 
 private:
-    LayerStackupModelBuilder::Height GetHeight(EFloat height) const;
-    LayerStackupModelBuilder::LayerRange GetLayerRange(EFloat elevation, EFloat thickness) const;
+    LayerStackupModel::Height GetHeight(Float height) const;
+    LayerStackupModel::LayerRange GetLayerRange(Float elevation, Float thickness) const;
 
 private:
     CId<Layout> m_layout;
@@ -40,12 +37,12 @@ private:
     UPtr<LayoutRetriever> m_retriever;
 };
 
-inline LayerStackupModelBuilder::Height LayerStackupModelBuilder::GetHeight(EFloat height) const
+inline LayerStackupModel::Height LayerStackupModelBuilder::GetHeight(Float height) const
 {
     return m_model->GetHeight(height);
 }
 
-inline LayerStackupModelBuilder::LayerRange LayerStackupModelBuilder::GetLayerRange(EFloat elevation, EFloat thickness) const
+inline LayerStackupModel::LayerRange LayerStackupModelBuilder::GetLayerRange(Float elevation, Float thickness) const
 {
     return m_model->GetLayerRange(elevation, thickness);
 }
