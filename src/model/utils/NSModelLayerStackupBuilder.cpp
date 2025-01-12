@@ -1,6 +1,7 @@
 #include "NSModelLayerStackupBuilder.h"
 #include "NSModelLayerStackup.h"
 #include <core/package>
+#include <core/power>
 
 namespace nano::heat::model::utils {
 
@@ -28,26 +29,48 @@ UPtr<LayerStackupModelBuilder::Model> LayerStackupModelBuilder::Build(CId<Layout
     while (auto comp = compIter.Next()) {
         AddComponent(comp);
     }
+
+    const auto & coordUnit = m_layout->GetCoordUnit();
+    auto scale2Unit = coordUnit.Scale2Unit();
+    auto scale2Meter = coordUnit.toUnit<FCoord>(coordUnit.toCoord(1), CoordUnit::Unit::Meter);
+
+    HashMap<CId<StackupLayer>, IdArr2<Material>> layerMaterialMap;
+    HashMap<CId<StackupLayer>, Arr2<Float>> layerElevationThicknessMap;
+    auto connObjIter = m_layout->GetConnObjIter();
+    while (auto connObj = connObjIter.Next()) {
+        if (auto bondingWire = connObj->GetBondingWire(); bondingWire) {
+            LayerStackupModel::BondingWire bw;
+            check = m_retriever->GetBondingWireSegmentsWithMinSeg(bondingWire, bw.pt2ds, bw.heights, 10);
+            NS_ASSERT_MSG(check, "failed to get bonding wire segments");
+            
+
+        }
+        
+    }
+
+
+
+    return model;
 }
 
 
-IdType LayerStackupModelBuilder::AddPolygon(IdType netId, IdType matId, NPlygon polygon, bool isHole, Float elevation, Float thickness)
+IdType LayerStackupModelBuilder::AddPolygon(IdType netId, IdType matId, NPolygon polygon, bool isHole, Float elevation, Float thickness)
 {
     auto layerRange = GetLayerRange(elevation, thickness);
-    if (not layerRange.isValid()) return invalidIndex;
+    if (not layerRange.isValid()) return INVALID_ID;
     if (isHole == polygon.isCCW()) polygon.Reverse();
-    m_model->m_ranges.emplace_back(std::move(layerRange));
+    m_model->m_layerRanges.emplace_back(std::move(layerRange));
     m_model->m_polygons.emplace_back(std::move(polygon));
     m_model->m_materials.emplace_back(matId);
     m_model->m_nets.emplace_back(netId);
     return m_model->m_polygons.size() - 1;
 }
 
-void LayerStackupModelBuilder::AddShape(IdType netId, EMaterialId solidMat, EMaterialId holeMat, CId<Shape> shape, EFloat elevation, EFloat thickness)
+void LayerStackupModelBuilder::AddShape(IdType netId, IdType solidMat, IdType holeMat, CId<Shape> shape, Float elevation, Float thickness)
 {
     if (m_model->m_settings.addCircleCenterAsSteinerPoint) {
         if (ShapeType::CIRCLE == shape->GetType()) {
-            auto circle = CId<Circle>(shape);
+            auto circle = CId<ShapeCircle>(shape);
             m_model->m_steinerPoints.emplace_back(circle->GetCenter());
         }
     }
@@ -60,14 +83,41 @@ void LayerStackupModelBuilder::AddShape(IdType netId, EMaterialId solidMat, EMat
     else AddPolygon(netId, solidMat, shape->GetContour().outline, false, elevation, thickness);
 }
 
+bool LayerStackupModelBuilder::AddPowerBlock(IdType matId, NPolygon polygon, ScenarioId scen, IdType powerLut, Float elevation, Float thickness, Float pwrPosition, Float pwrThickness)
+{
+    auto index = AddPolygon(INVALID_ID, matId, std::move(polygon), false, elevation, thickness);
+    if (INVALID_ID == index) return false;
+    Float pe = elevation - thickness * pwrPosition;
+    Float pt = std::min(thickness * pwrThickness, thickness - elevation + pe);
+    m_model->m_powerBlocks.emplace(index, LayerStackupModel::PowerBlock(index, GetLayerRange(pe, pt), scen, powerLut));
+    return true;
+}
+
 void LayerStackupModelBuilder::AddComponent(CId<Component> component)
 {
+    [[maybe_unused]] bool check{false};
     if (component->isBlackBox()) {
         Float elevation{0}, thickness{0};
-        auto boundary = component->GetBoundary()->GetContour();
         auto material = component->GetMaterial();
-        [[maybe_unused]] auto check = m_retriever->GetComponentHeightThickness(component, elevation, thickness);
+        auto boundary = component->GetBoundary()->GetOutline();
+        check = m_retriever->GetComponentHeightThickness(component, elevation, thickness);
         NS_ASSERT_MSG(check, "failed to get component height thickness");
+
+        if (auto lossPower = component->GetBind<LossPower>(); lossPower) {
+            auto scen = lossPower->GetScenario();
+            auto lut = lossPower->GetLookupTable();
+            check = AddPowerBlock(IdType(material), boundary, scen, lut, elevation, thickness);
+            NS_ASSERT_MSG(check, "failed to add power block")
+        }
+        else AddPolygon(INVALID_ID, IdType(material), boundary, false, elevation, thickness);
+        
+        check = m_retriever->GetComponentLayerHeightThickness(component->GetAssemblyLayer(), elevation, thickness);
+        NS_ASSERT_MSG(check, "failed to get component layer height thickness");
+        if (thickness > 0) {
+            auto solderMat = component->GetAssemblyLayer()->GetSolderFillingMaterial();
+            AddPolygon(INVALID_ID, IdType(solderMat), boundary, false, elevation, thickness);
+            //todo, solder ball/bump
+        }
     }
     else {
         NS_ASSERT_MSG(false, "todo");
