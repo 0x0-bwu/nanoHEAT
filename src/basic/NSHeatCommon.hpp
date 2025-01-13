@@ -1,5 +1,5 @@
 #pragma once
-#include <core/common>
+#include <nano/core/common>
 #include "NSHeatAlias.hpp"
 namespace nano::heat {
 
