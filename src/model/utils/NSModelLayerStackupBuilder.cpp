@@ -1,7 +1,7 @@
 #include "NSModelLayerStackupBuilder.h"
 #include "NSModelLayerStackup.h"
-#include <core/package>
-#include <core/power>
+#include <nano/core/package>
+#include <nano/core/power>
 
 namespace nano::heat::model::utils {
 

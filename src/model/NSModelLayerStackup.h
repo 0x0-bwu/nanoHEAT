@@ -1,6 +1,5 @@
 #pragma once
-#include <core/basic>
-#include <core/common>
+#include <nano/common>
 #include <list>
 
 #include "basic/NSHeatCommon.hpp"
