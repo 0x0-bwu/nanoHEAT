@@ -18,7 +18,8 @@ public:
     using Model = LayerStackupModel;
     using Settings = LayerStackupModelBuildSettings;
     using LayoutRetriever = package::utils::LayoutRetriever;
-    UPtr<Model> Build(CId<Layout> layout, Settings settings);
+    explicit LayerStackupModelBuilder(Ref<Model> model);
+    bool Build(CId<Layout> layout, Settings settings);
 
 private:
 
@@ -32,19 +33,19 @@ private:
     LayerStackupModel::LayerRange GetLayerRange(Float elevation, Float thickness) const;
 
 private:
+    Ref<Model> m_model;
     CId<Layout> m_layout;
-    Ptr<Model> m_model;
     UPtr<LayoutRetriever> m_retriever;
 };
 
 inline LayerStackupModel::Height LayerStackupModelBuilder::GetHeight(Float height) const
 {
-    return m_model->GetHeight(height);
+    return m_model.GetHeight(height);
 }
 
 inline LayerStackupModel::LayerRange LayerStackupModelBuilder::GetLayerRange(Float elevation, Float thickness) const
 {
-    return m_model->GetLayerRange(elevation, thickness);
+    return m_model.GetLayerRange(elevation, thickness);
 }
 
 } // namespace utils;
