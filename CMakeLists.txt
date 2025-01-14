@@ -197,7 +197,9 @@ message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
 
-add_subdirectory(3rdparty/nanoDB/src)
+if (BUILD_NANODB_FROM_SRC)
+	add_subdirectory(3rdparty/nanoDB/src)
+endif()
 add_subdirectory(src)
 
 option(BUILD_NANO_TEST "Build unit test" ON)
