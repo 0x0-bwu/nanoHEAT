@@ -5,12 +5,15 @@
 
 namespace nano::heat::model::utils {
 
-UPtr<LayerStackupModelBuilder::Model> LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
+LayerStackupModelBuilder::LayerStackupModelBuilder(Ref<Model> model) : m_model(model) {}
+
+bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
 {
-    auto model = std::make_unique<Model>();
-    m_model = model.get();
-    m_model->m_settings = std::move(settings);
-    m_model->m_vScale2Int = std::pow(10, m_model->m_settings.layerCutPrecision);
+    if (not layout) return false;
+
+    m_model.Reset();
+    m_model->settings = std::move(settings);
+    m_model->vScale2Int = std::pow(10, m_model->settings.layerCutPrecision);
 
     m_layout = layout;
     m_retriever = std::make_unique<LayoutRetriever>(m_layout);
@@ -50,28 +53,27 @@ UPtr<LayerStackupModelBuilder::Model> LayerStackupModelBuilder::Build(CId<Layout
 
 
 
-    return model;
+    return true;
 }
-
 
 IdType LayerStackupModelBuilder::AddPolygon(IdType netId, IdType matId, NPolygon polygon, bool isHole, Float elevation, Float thickness)
 {
     auto layerRange = GetLayerRange(elevation, thickness);
     if (not layerRange.isValid()) return INVALID_ID;
     if (isHole == polygon.isCCW()) polygon.Reverse();
-    m_model->m_layerRanges.emplace_back(std::move(layerRange));
-    m_model->m_polygons.emplace_back(std::move(polygon));
-    m_model->m_materials.emplace_back(matId);
-    m_model->m_nets.emplace_back(netId);
-    return m_model->m_polygons.size() - 1;
+    m_model->layerRanges.emplace_back(std::move(layerRange));
+    m_model->polygons.emplace_back(std::move(polygon));
+    m_model->materials.emplace_back(matId);
+    m_model->nets.emplace_back(netId);
+    return m_model->polygons.size() - 1;
 }
 
 void LayerStackupModelBuilder::AddShape(IdType netId, IdType solidMat, IdType holeMat, CId<Shape> shape, Float elevation, Float thickness)
 {
-    if (m_model->m_settings.addCircleCenterAsSteinerPoint) {
+    if (m_model->settings.addCircleCenterAsSteinerPoint) {
         if (ShapeType::CIRCLE == shape->GetType()) {
             auto circle = CId<ShapeCircle>(shape);
-            m_model->m_steinerPoints.emplace_back(circle->GetCenter());
+            m_model->steinerPoints.emplace_back(circle->GetCenter());
         }
     }
     if (shape->hasHole()) {
@@ -89,7 +91,7 @@ bool LayerStackupModelBuilder::AddPowerBlock(IdType matId, NPolygon polygon, Sce
     if (INVALID_ID == index) return false;
     Float pe = elevation - thickness * pwrPosition;
     Float pt = std::min(thickness * pwrThickness, thickness - elevation + pe);
-    m_model->m_powerBlocks.emplace(index, LayerStackupModel::PowerBlock(index, GetLayerRange(pe, pt), scen, powerLut));
+    m_model->powerBlocks.emplace(index, LayerStackupModel::PowerBlock(index, GetLayerRange(pe, pt), scen, powerLut));
     return true;
 }
 

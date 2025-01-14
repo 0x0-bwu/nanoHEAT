@@ -82,7 +82,8 @@ public:
         }
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
     };
-    
+    LayerStackupModel();
+    void Reset() { *this = LayerStackupModel(); }
     bool WritePNG(std::string_view filename, size_t witth = 1024) const;
     void BuildLayerPolygonLUT(Float transitionRatio);
     size_t TotalLayers() const;
@@ -107,35 +108,34 @@ public:
 
 private:
     NS_SERIALIZATION_FUNCTIONS_DECLARATION;
-private:
-    std::vector<IdType> m_nets;
-    std::vector<IdType> m_materials;
-    std::vector<NPolygon> m_polygons;
-    std::vector<NCoord2D> m_steinerPoints;
-    std::vector<LayerRange> m_layerRanges;
-    std::vector<BondingWire> m_bondingWires;
-    HashMap<IdType, PowerBlock> m_powerBlocks;
-    LayerStackupModelBuildSettings m_settings;
-
-    HashMap<IdType, SPtr<PolygonIds>> m_layerPolygons;
-    HashMap<Height, IdType> m_height2indices;
-    std::vector<Height> m_layerOrder;
-    Float m_vScale2Int;
+    NS_CLASS_MEMBERS_DEFINE(
+    (std::vector<IdType>, nets),
+    (std::vector<IdType>, materials),
+    (std::vector<NPolygon>, polygons),
+    (std::vector<NCoord2D>, steinerPoints),
+    (std::vector<LayerRange>, layerRanges),
+    (std::vector<BondingWire>, bondingWires),
+    (HashMap<IdType, PowerBlock>, powerBlocks),
+    (LayerStackupModelBuildSettings, settings),
+    (HashMap<IdType, SPtr<PolygonIds>>, layerPolygons),
+    (HashMap<Height, IdType>, height2indices),
+    (std::vector<Height>, layerOrder),
+    (Float, vScale2Int))
 };
 
 inline IdType LayerStackupModel::GetNetId(IdType pid) const
 {
-    return m_nets.at(pid);
+    return m_.nets.at(pid);
 }
 
 inline IdType LayerStackupModel::GetMaterialId(IdType pid) const
 {
-    return m_materials.at(pid);
+    return m_.materials.at(pid);
 }
 
 inline LayerStackupModel::Height LayerStackupModel::GetHeight(Float height) const
 {
-    return std::round(height * m_vScale2Int);
+    return std::round(height * m_.vScale2Int);
 }
 
 } // namespace nano::heat::model

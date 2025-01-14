@@ -11,27 +11,21 @@ template <typename Archive>
 void LayerStackupModel::serialize(Archive & ar, const unsigned int version)
 {
     NS_UNUSED(version)
-    ar & boost::serialization::make_nvp("nets"           , m_nets          );
-    ar & boost::serialization::make_nvp("materials"      , m_materials     );
-    ar & boost::serialization::make_nvp("polygons"       , m_polygons      );
-    ar & boost::serialization::make_nvp("steiner_points" , m_steinerPoints );
-    ar & boost::serialization::make_nvp("layer_ranges"   , m_layerRanges   );
-    ar & boost::serialization::make_nvp("bonding_wires"  , m_bondingWires  );
-    ar & boost::serialization::make_nvp("power_blocks"   , m_powerBlocks   );
-    ar & boost::serialization::make_nvp("settings"       , m_settings      );
-    ar & boost::serialization::make_nvp("layer_polygons" , m_layerPolygons );
-    ar & boost::serialization::make_nvp("height2index"   , m_height2indices);
-    ar & boost::serialization::make_nvp("layer_order"    , m_layerOrder    );
-    ar & boost::serialization::make_nvp("scale"          , m_vScale2Int    );
+    NS_SERIALIZATION_CLASS_MEMBERS(ar);
 }
     
 NS_SERIALIZATION_FUNCTIONS_IMP(LayerStackupModel)
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
 
+LayerStackupModel::LayerStackupModel()
+{
+    NS_CLASS_MEMBERS_INITIALIZE
+}
+
 bool LayerStackupModel::WritePNG(std::string_view filename, size_t width) const
 {
-    auto shapes = m_polygons;
-    for (const auto & bw : m_bondingWires)
+    auto shapes = m_.polygons;
+    for (const auto & bw : m_.bondingWires)
         shapes.emplace_back(NPolygon(bw.pt2ds));
     return generic::geometry::GeometryIO::WritePNG(filename, shapes.begin(), shapes.end(), width);
     return false;
@@ -39,122 +33,122 @@ bool LayerStackupModel::WritePNG(std::string_view filename, size_t width) const
 
 void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
 {
-    m_layerOrder.clear();
-    m_height2indices.clear();
+    m_.layerOrder.clear();
+    m_.height2indices.clear();
     std::set<Height> heights;
-    for (size_t i = 0; i < m_layerRanges.size(); ++i) {
-        if (INVALID_ID == m_materials.at(i)) continue;
-        const auto & range = m_layerRanges.at(i);
+    for (size_t i = 0; i < m_.layerRanges.size(); ++i) {
+        if (INVALID_ID == m_.materials.at(i)) continue;
+        const auto & range = m_.layerRanges.at(i);
         if (not range.isValid()) continue;
         heights.emplace(range.high);
         heights.emplace(range.low);
-        auto iter = m_powerBlocks.find(i);
-        if (iter != m_powerBlocks.cend()) {
+        auto iter = m_.powerBlocks.find(i);
+        if (iter != m_.powerBlocks.cend()) {
             heights.emplace(iter->second.range.high);
             heights.emplace(iter->second.range.low);
         }
     }
-    m_layerOrder = std::vector(heights.begin(), heights.end());
-    std::reverse(m_layerOrder.begin(), m_layerOrder.end());
-    for (size_t i = 0; i < m_layerOrder.size(); ++i)
-        m_height2indices.emplace(m_layerOrder.at(i), i);
+    m_.layerOrder = std::vector(heights.begin(), heights.end());
+    std::reverse(m_.layerOrder.begin(), m_.layerOrder.end());
+    for (size_t i = 0; i < m_.layerOrder.size(); ++i)
+        m_.height2indices.emplace(m_.layerOrder.at(i), i);
 
-    m_layerPolygons.clear();
-    for (size_t i = 0; i < m_polygons.size(); ++i) {
-        const auto & range = m_layerRanges.at(i);
+    m_.layerPolygons.clear();
+    for (size_t i = 0; i < m_.polygons.size(); ++i) {
+        const auto & range = m_.layerRanges.at(i);
         if (not range.isValid()) continue;
-        IdType sLayer = m_height2indices.at(range.high);
-        IdType eLayer = std::min(TotalLayers(), m_height2indices.at(range.low));
+        IdType sLayer = m_.height2indices.at(range.high);
+        IdType eLayer = std::min(TotalLayers(), m_.height2indices.at(range.low));
         for (IdType layer = sLayer; layer < eLayer; ++layer) {
-            auto iter = m_layerPolygons.find(layer);
-            if (iter == m_layerPolygons.cend())
-                iter = m_layerPolygons.emplace(layer, new PolygonIds).first;
+            auto iter = m_.layerPolygons.find(layer);
+            if (iter == m_.layerPolygons.cend())
+                iter = m_.layerPolygons.emplace(layer, new PolygonIds).first;
             iter->second->emplace_back(i);
         }
     }
 
     if (generic::math::GT<Float>(vTransitionRatio, 1)) {
         std::list<LayerRange> ranges;
-        for (size_t i = 0; i < m_layerOrder.size() - 1; ++i)
-            ranges.emplace_back(m_layerOrder.at(i), m_layerOrder.at(i + 1));
+        for (size_t i = 0; i < m_.layerOrder.size() - 1; ++i)
+            ranges.emplace_back(m_.layerOrder.at(i), m_.layerOrder.at(i + 1));
 
         bool sliced = true;
         while (sliced) {
             sliced = SliceOverheightLayers(ranges, vTransitionRatio);
         }
-        m_layerOrder.clear();
-        m_layerOrder.reserve(ranges.size() + 1);
+        m_.layerOrder.clear();
+        m_.layerOrder.reserve(ranges.size() + 1);
         for (const auto & range : ranges)
-            m_layerOrder.emplace_back(range.high);
-        m_layerOrder.emplace_back(ranges.back().low);
+            m_.layerOrder.emplace_back(range.high);
+        m_.layerOrder.emplace_back(ranges.back().low);
         std::unordered_map<size_t, SPtr<std::vector<size_t>> > lyrPolygons;
-        for (size_t i = 0; i < m_layerOrder.size() - 1; ++i) {
-            auto iter = m_height2indices.find(m_layerOrder.at(i));
-            if (iter != m_height2indices.cend())
-                lyrPolygons.emplace(i, m_layerPolygons.at(iter->second));
+        for (size_t i = 0; i < m_.layerOrder.size() - 1; ++i) {
+            auto iter = m_.height2indices.find(m_.layerOrder.at(i));
+            if (iter != m_.height2indices.cend())
+                lyrPolygons.emplace(i, m_.layerPolygons.at(iter->second));
             else lyrPolygons.emplace(i, lyrPolygons.at(i - 1));
         }
-        std::swap(m_layerPolygons, lyrPolygons);
-        m_height2indices.clear();
-        for (size_t i = 0; i < m_layerOrder.size(); ++i)
-            m_height2indices.emplace(m_layerOrder.at(i), i);
+        std::swap(m_.layerPolygons, lyrPolygons);
+        m_.height2indices.clear();
+        for (size_t i = 0; i < m_.layerOrder.size(); ++i)
+            m_.height2indices.emplace(m_.layerOrder.at(i), i);
     }
 }
 
 size_t LayerStackupModel::TotalLayers() const
 {
-    return m_layerOrder.size() - 1;
+    return m_.layerOrder.size() - 1;
 }
 
 bool LayerStackupModel::hasPolygon(IdType layer) const
 {
-    return m_layerPolygons.count(layer);
+    return m_.layerPolygons.count(layer);
 }
 
 bool LayerStackupModel::GetLayerHeightThickness(IdType layer, Float & elevation, Float & thickness) const
 {
     if (layer >= TotalLayers()) return false;
-    elevation = Float(m_layerOrder.at(layer)) / m_vScale2Int;
-    thickness = elevation - Float(m_layerOrder.at(layer + 1)) / m_vScale2Int;
+    elevation = Float(m_.layerOrder.at(layer)) / m_.vScale2Int;
+    thickness = elevation - Float(m_.layerOrder.at(layer + 1)) / m_.vScale2Int;
     return true;
 }
 
 IdType LayerStackupModel::GetLayerIndexByHeight(Height height) const
 {
-    auto iter = m_height2indices.find(height);
-    if (iter == m_height2indices.cend()) return INVALID_ID;
+    auto iter = m_.height2indices.find(height);
+    if (iter == m_.height2indices.cend()) return INVALID_ID;
     return iter->second;
 }
 
 const NPolygon & LayerStackupModel::GetLayoutBoundary() const
 {
-    return m_polygons.front();
+    return m_.polygons.front();
 }
 
 const auto & LayerStackupModel::GetAllPowerBlocks() const
 {
-    return m_powerBlocks;
+    return m_.powerBlocks;
 }
 
 const auto & LayerStackupModel::GetAllPolygons() const
 {
-    return m_polygons;
+    return m_.polygons;
 }
 
 const auto & LayerStackupModel::GetSteinerPoints() const
 {
-    return m_steinerPoints;
+    return m_.steinerPoints;
 }
 
 const auto & LayerStackupModel::GetAllBondingWires() const
 {
-    return m_bondingWires;
+    return m_.bondingWires;
 }
 
 SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(size_t layer) const
 {
-    auto iter = m_layerPolygons.find(layer);
-    NS_ASSERT(iter != m_layerPolygons.cend());
+    auto iter = m_.layerPolygons.find(layer);
+    NS_ASSERT(iter != m_.layerPolygons.cend());
     return iter->second;
 }
 
@@ -167,7 +161,7 @@ std::vector<NPolygon> LayerStackupModel::GetLayerPolygons(size_t layer) const
 {
     auto indices = GetLayerPolygonIds(layer);
     std::vector<NPolygon> polygons; polygons.reserve(indices->size());
-    std::transform(indices->begin(), indices->end(), std::back_inserter(polygons), [&](auto i){ return m_polygons.at(i); });
+    std::transform(indices->begin(), indices->end(), std::back_inserter(polygons), [&](auto i){ return m_.polygons.at(i); });
     return polygons;
 }
 
