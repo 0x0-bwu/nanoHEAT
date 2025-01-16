@@ -5,15 +5,17 @@
 #include "basic/NSHeatCommon.hpp"
 namespace nano::heat::model {
 
-namespace utils { class LayerStackupModelBuilder; }
+namespace utils {
+class LayerStackupModelBuilder;
+} // namespace utils
 
 class LayerStackupModel
 {
 public:
-    // friend class utils::LayerStackupModelQuery;
     friend class utils::LayerStackupModelBuilder;
     using Height = int;
     using PolygonIds = std::vector<IdType>;
+    using Settings = nano::heat::LayerStackupModelBuildSettings;
     struct LayerRange
     {
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
@@ -83,6 +85,7 @@ public:
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
     };
     LayerStackupModel();
+    virtual ~LayerStackupModel() = default;
     void Reset() { *this = LayerStackupModel(); }
     bool WritePNG(std::string_view filename, size_t witth = 1024) const;
     void BuildLayerPolygonLUT(Float transitionRatio);
@@ -116,11 +119,11 @@ private:
     (std::vector<LayerRange>, layerRanges),
     (std::vector<BondingWire>, bondingWires),
     (HashMap<IdType, PowerBlock>, powerBlocks),
-    (LayerStackupModelBuildSettings, settings),
     (HashMap<IdType, SPtr<PolygonIds>>, layerPolygons),
     (HashMap<Height, IdType>, height2indices),
     (std::vector<Height>, layerOrder),
-    (Float, vScale2Int))
+    (Float, vScale2Int),
+    (Settings, settings))
 };
 
 inline IdType LayerStackupModel::GetNetId(IdType pid) const

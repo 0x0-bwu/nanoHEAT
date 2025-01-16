@@ -1,22 +1,13 @@
 #pragma once
 #include "model/NSModelLayerStackup.h"
-
-namespace nano {
-
-namespace package::utils { class LayoutRetriever; }
-
-namespace heat::model {
-
-class LayerStackupModel;
-
-namespace utils {
-
+#include <nano/core/package>
+namespace nano::heat::model::utils {
 using namespace package;
 class LayerStackupModelBuilder
 {
 public:
-    using Model = LayerStackupModel;
-    using Settings = LayerStackupModelBuildSettings;
+    using Model = nano::heat::model::LayerStackupModel;
+    using Settings = typename Model::Settings;
     using LayoutRetriever = package::utils::LayoutRetriever;
     explicit LayerStackupModelBuilder(Ref<Model> model);
     bool Build(CId<Layout> layout, Settings settings);
@@ -49,6 +40,4 @@ inline LayerStackupModel::LayerRange LayerStackupModelBuilder::GetLayerRange(Flo
     return m_model.GetLayerRange(elevation, thickness);
 }
 
-} // namespace utils;
-} // namespace heat::model
-} // namespace nano
+} // namespace nano::heat::model::utils

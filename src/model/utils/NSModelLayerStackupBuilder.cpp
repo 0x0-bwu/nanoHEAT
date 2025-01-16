@@ -1,6 +1,5 @@
 #include "NSModelLayerStackupBuilder.h"
 #include "NSModelLayerStackup.h"
-#include <nano/core/package>
 #include <nano/core/power>
 
 #include "generic/geometry/Utility.hpp"
