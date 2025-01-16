@@ -3,3 +3,5 @@ add_library(nanoHeatModel
     NSModelLayerStackup.cpp
     NSModel.cpp
 )
+
+target_link_libraries(nanoHeatModel nanoDB)
