@@ -7,16 +7,30 @@
 #include "generic/tools/FileSystem.hpp"
 #include "generic/math/MathUtility.hpp"
 
+#include "model/NSModel.h"
+
 using namespace nano;
 using namespace boost::unit_test;
 
 void t_build_layer_stackup_model()
 {
+    using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.xml";
     auto res = Database::Load(filename, ArchiveFormat::XML);
-    auto pkg = nano::FindOne<Package>([](auto p) { return p->GetName() == "CAS300M12BM2"; });
+    BOOST_CHECK(res);
+
+    auto pred = [](const auto & p) { return p.GetName() == "CAS300M12BM2"; };
+    IdVec<Package, NameLut> packages;
+    nano::FindAll<Package>(pred, packages);
+    BOOST_CHECK(packages.size() == 1);
+    auto pkg = nano::FindOne<Package>(pred);
     BOOST_CHECK(pkg);
+    BOOST_CHECK(pkg == packages.Lookup<lut::Name>("CAS300M12BM2"));
+
+    auto layout = pkg->GetTop()->GetFlattenedLayout();
+    auto model = model::CreateLayerStackupModel(layout, LayerStackupModelBuildSettings());
+    BOOST_CHECK(model);
 
     Database::Shutdown();
 }
