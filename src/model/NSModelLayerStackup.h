@@ -15,7 +15,7 @@ public:
     friend class utils::LayerStackupModelBuilder;
     using Height = int;
     using PolygonIds = std::vector<IdType>;
-    using Settings = nano::heat::LayerStackupModelBuildSettings;
+    using Settings = nano::heat::LayerStackupModelExtractionSettings;
     struct LayerRange
     {
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT

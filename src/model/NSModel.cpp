@@ -2,7 +2,7 @@
 #include "utils/NSModelLayerStackupBuilder.h"
 namespace nano::heat::model {
 
-UPtr<LayerStackupModel> CreateLayerStackupModel(CId<package::Layout> layout, LayerStackupModelBuildSettings settings)
+UPtr<LayerStackupModel> CreateLayerStackupModel(CId<package::Layout> layout, LayerStackupModelExtractionSettings settings)
 {
     auto model = std::make_unique<LayerStackupModel>();
     utils::LayerStackupModelBuilder builder(*model);

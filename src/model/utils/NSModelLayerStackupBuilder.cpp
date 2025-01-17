@@ -94,6 +94,15 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     const auto & coordUnit = m_layout->GetCoordUnit();
     for (const auto & box : m_model->settings.imprintBoxes)
         AddImprintBox(coordUnit.toCoord(box));
+
+    m_model.BuildLayerPolygonLUT(m_model->settings.layerTransitionRatio);
+
+    if (m_model->settings.dumpPNG) {
+        auto name = m_layout->GetPackage()->GetName();
+        auto filename = std::string(nano::CurrentDir()) + '/' + name.data() + ".png";
+        m_model.WritePNG(filename, 2048);
+    }
+
     return true;
 }
 

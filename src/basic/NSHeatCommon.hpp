@@ -3,18 +3,18 @@
 #include "NSHeatAlias.hpp"
 namespace nano::heat {
 
-struct LayerStackupModelBuildSettings
+struct LayerStackupModelExtractionSettings
 {
-    BOOST_HANA_DEFINE_STRUCT(LayerStackupModelBuildSettings,
-        (bool, dumpSketchImg),
+    BOOST_HANA_DEFINE_STRUCT(LayerStackupModelExtractionSettings,
+        (bool, dumpPNG),
         (bool, addCircleCenterAsSteinerPoint),
         (size_t, layerCutPrecision),
         (Float, layerTransitionRatio),
         (std::vector<FBox2D>, imprintBoxes)
     );
-    LayerStackupModelBuildSettings()
+    LayerStackupModelExtractionSettings()
     {
-        dumpSketchImg = true;
+        dumpPNG = true;
         addCircleCenterAsSteinerPoint = false;
         layerCutPrecision = 6;
         layerTransitionRatio = 2;
