@@ -47,7 +47,7 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
             heights.emplace(iter->second.range.low);
         }
     }
-    m_.layerOrder = std::vector(heights.begin(), heights.end());
+    m_.layerOrder = Vec<Height>(heights.begin(), heights.end());
     std::reverse(m_.layerOrder.begin(), m_.layerOrder.end());
     for (size_t i = 0; i < m_.layerOrder.size(); ++i)
         m_.height2indices.emplace(m_.layerOrder.at(i), i);
@@ -80,7 +80,7 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
         for (const auto & range : ranges)
             m_.layerOrder.emplace_back(range.high);
         m_.layerOrder.emplace_back(ranges.back().low);
-        std::unordered_map<size_t, SPtr<std::vector<size_t>> > lyrPolygons;
+        HashMap<size_t, SPtr<Vec<size_t>>> lyrPolygons;
         for (size_t i = 0; i < m_.layerOrder.size() - 1; ++i) {
             auto iter = m_.height2indices.find(m_.layerOrder.at(i));
             if (iter != m_.height2indices.cend())
@@ -144,7 +144,7 @@ const auto & LayerStackupModel::GetAllBondingWires() const
     return m_.bondingWires;
 }
 
-SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(size_t layer) const
+SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(IdType layer) const
 {
     auto iter = m_.layerPolygons.find(layer);
     NS_ASSERT(iter != m_.layerPolygons.cend());
@@ -156,10 +156,10 @@ LayerStackupModel::LayerRange LayerStackupModel::GetLayerRange(Float elevation, 
     return LayerRange{GetHeight(elevation), GetHeight(elevation - thickness)};
 }
 
-std::vector<NPolygon> LayerStackupModel::GetLayerPolygons(size_t layer) const
+Vec<NPolygon> LayerStackupModel::GetLayerPolygons(IdType layer) const
 {
     auto indices = GetLayerPolygonIds(layer);
-    std::vector<NPolygon> polygons; polygons.reserve(indices->size());
+    Vec<NPolygon> polygons; polygons.reserve(indices->size());
     std::transform(indices->begin(), indices->end(), std::back_inserter(polygons), [&](auto i){ return m_.polygons.at(i); });
     return polygons;
 }

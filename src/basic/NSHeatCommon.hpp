@@ -10,7 +10,7 @@ struct LayerStackupModelExtractionSettings
         (bool, addCircleCenterAsSteinerPoint),
         (size_t, layerCutPrecision),
         (Float, layerTransitionRatio),
-        (std::vector<FBox2D>, imprintBoxes)
+        (Vec<FBox2D>, imprintBoxes)
     );
     LayerStackupModelExtractionSettings()
     {
