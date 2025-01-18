@@ -14,7 +14,7 @@ class LayerStackupModel
 public:
     friend class utils::LayerStackupModelBuilder;
     using Height = int;
-    using PolygonIds = std::vector<IdType>;
+    using PolygonIds = Vec<IdType>;
     using Settings = nano::heat::LayerStackupModelExtractionSettings;
     struct LayerRange
     {
@@ -66,8 +66,8 @@ public:
         IdType netId{INVALID_ID};
         IdType matId{INVALID_ID};
         ScenarioId scenario;
-        std::vector<Float> heights;
-        std::vector<NCoord2D> pt2ds;
+        Vec<Float> heights;
+        Vec<NCoord2D> pt2ds;
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
         friend class boost::serialization::access;
         template <typename Archive>
@@ -105,23 +105,23 @@ public:
 
     Height GetHeight(Float height) const;
     LayerRange GetLayerRange(Float elevation, Float thickness) const;
-    std::vector<NPolygon> GetLayerPolygons(IdType layer) const;
+    Vec<NPolygon> GetLayerPolygons(IdType layer) const;
 
     static bool SliceOverheightLayers(std::list<LayerRange> & ranges, Float ratio);
 
 private:
     NS_SERIALIZATION_FUNCTIONS_DECLARATION;
     NS_CLASS_MEMBERS_DEFINE(
-    (std::vector<IdType>, nets),
-    (std::vector<IdType>, materials),
-    (std::vector<NPolygon>, polygons),
-    (std::vector<NCoord2D>, steinerPoints),
-    (std::vector<LayerRange>, layerRanges),
-    (std::vector<BondingWire>, bondingWires),
+    (Vec<IdType>, nets),
+    (Vec<IdType>, materials),
+    (Vec<NPolygon>, polygons),
+    (Vec<NCoord2D>, steinerPoints),
+    (Vec<LayerRange>, layerRanges),
+    (Vec<BondingWire>, bondingWires),
     (HashMap<IdType, PowerBlock>, powerBlocks),
     (HashMap<IdType, SPtr<PolygonIds>>, layerPolygons),
     (HashMap<Height, IdType>, height2indices),
-    (std::vector<Height>, layerOrder),
+    (Vec<Height>, layerOrder),
     (Float, vScale2Int),
     (Settings, settings))
 };
