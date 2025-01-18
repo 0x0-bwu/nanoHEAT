@@ -14,6 +14,7 @@ struct LayerStackupModelExtractionSettings
     );
     LayerStackupModelExtractionSettings()
     {
+        NS_INIT_HANA_STRUCT(*this);
         dumpPNG = true;
         addCircleCenterAsSteinerPoint = false;
         layerCutPrecision = 6;

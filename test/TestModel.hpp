@@ -24,14 +24,15 @@ void t_build_layer_stackup_model()
     IdVec<Package, NameLut> packages;
     nano::FindAll<Package>(pred, packages);
     BOOST_CHECK(packages.size() == 1);
-    auto pkg = nano::FindOne<Package>(pred);
+    auto pkg = nano::Find<Package>(pred);
     BOOST_CHECK(pkg);
     BOOST_CHECK(pkg == packages.Lookup<lut::Name>("CAS300M12BM2"));
 
     auto layout = pkg->GetTop()->GetFlattenedLayout();
     BOOST_CHECK(layout);
-    // auto model = model::CreateLayerStackupModel(layout, LayerStackupModelExtractionSettings());
-    // BOOST_CHECK(model);
+    
+    auto model = model::CreateLayerStackupModel(layout, LayerStackupModelExtractionSettings());
+    BOOST_CHECK(model);
 
     Database::Shutdown();
 }

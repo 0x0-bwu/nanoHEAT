@@ -28,7 +28,6 @@ bool LayerStackupModel::WritePNG(std::string_view filename, size_t width) const
     for (const auto & bw : m_.bondingWires)
         shapes.emplace_back(NPolygon(bw.pt2ds));
     return generic::geometry::GeometryIO::WritePNG(filename, shapes.begin(), shapes.end(), width);
-    return false;
 }
 
 void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
