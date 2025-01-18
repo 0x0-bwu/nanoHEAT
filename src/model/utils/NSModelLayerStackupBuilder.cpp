@@ -100,7 +100,7 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     if (m_model->settings.dumpPNG) {
         auto name = m_layout->GetPackage()->GetName();
         auto filename = std::string(nano::CurrentDir()) + '/' + name.data() + ".png";
-        m_model.WritePNG(filename, 2048);
+        m_model.WritePNG(filename, 4096);
     }
 
     return true;
