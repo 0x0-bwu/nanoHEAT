@@ -1,11 +1,12 @@
 #pragma once
-
-#include "NSModelLayerStackup.h"
+#include "basic/NSHeatCommon.hpp"
+#include "model/NSModelLayerStackup.h"
+#include "model/NSModelPrismThermal.h"
+#include <nano/fwd>
 namespace nano::heat::model {
 
-class LayerStackupModel;
-
 UPtr<LayerStackupModel> CreateLayerStackupModel(CId<package::Layout> layout, LayerStackupModelExtractionSettings settings);
+UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, PrismThermalModelExtractionSettings settings);
 
 
 } // namespace nano::heat::model

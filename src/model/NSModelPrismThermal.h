@@ -1,8 +1,14 @@
 #pragma once
 #include <nano/common>
 #include "basic/NSHeatCommon.hpp"
+#include "generic/geometry/Triangulation.hpp"
 
 namespace nano::heat::model {
+
+class LayerStackupModel;
+namespace utils {
+class PrismThermalModelBuilder;
+} // namespace utils
 
 namespace pkg = nano::package;
 
@@ -26,7 +32,7 @@ struct LineElement
         matId = INVALID_ID;
         endPts = {INVALID_ID, INVALID_ID};
     }
-#ifdef NS_BOOST_SERIALIZATION_SUPPORT
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -34,7 +40,7 @@ struct LineElement
         NS_UNUSED(version);
         NS_SERIALIZATION_HANA_STRUCT(ar, *this);
     }
-#endif//NS_BOOST_SERIALIZATION_SUPPORT
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
 struct PrismElement
@@ -63,7 +69,7 @@ struct PrismElement
         neighbors.fill(INVALID_ID);
     }
 
-#ifdef NS_BOOST_SERIALIZATION_SUPPORT
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -71,7 +77,7 @@ struct PrismElement
         NS_UNUSED(version);
         NS_SERIALIZATION_HANA_STRUCT(ar, *this);
     }
-#endif//NS_BOOST_SERIALIZATION_SUPPORT
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
 struct PrismLayer
@@ -106,7 +112,7 @@ public:
     }
 
     size_t TotalElements() const { return elements.size(); }
-#ifdef NS_BOOST_SERIALIZATION_SUPPORT
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -114,7 +120,7 @@ public:
         NS_UNUSED(version);
         NS_SERIALIZATION_HANA_STRUCT(ar, *this);
     }
-#endif//NS_BOOST_SERIALIZATION_SUPPORT
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
 struct ContactInstance
@@ -133,7 +139,7 @@ struct ContactInstance
         this->id = id;
         this->ratio = ratio;
     }
-#ifdef NS_BOOST_SERIALIZATION_SUPPORT
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -141,7 +147,7 @@ struct ContactInstance
         NS_UNUSED(version);
         NS_SERIALIZATION_HANA_STRUCT(ar, *this);
     }
-#endif//NS_BOOST_SERIALIZATION_SUPPORT
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
 using ContactInstances = Vec<ContactInstance>;
@@ -155,7 +161,7 @@ struct PrismInstance
         (Arr5<IdType>, neighbors), //[edge1, edge2, edge3, top, bot]
         (Arr2<ContactInstances>, contacts)//[top, bot] only used for stackup prism model
     );
-protected:
+
     PrismInstance()
     {
         NS_INIT_HANA_STRUCT(*this);
@@ -164,14 +170,14 @@ protected:
         vertices.fill(INVALID_ID);
         neighbors.fill(INVALID_ID);
     }
-public:
+
     PrismInstance(IdType layer, IdType element) : PrismInstance()
     {
         this->layer = layer;
         this->element = element;
     }
 
-#ifdef NS_BOOST_SERIALIZATION_SUPPORT
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -179,22 +185,74 @@ public:
         NS_UNUSED(version);
         NS_SERIALIZATION_HANA_STRUCT(ar, *this);
     }
-#endif//NS_BOOST_SERIALIZATION_SUPPORT
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
-struct PrismThermalModel
+class PrismThermalModel
 {
-    BOOST_HANA_DEFINE_STRUCT(PrismThermalModel,
+public:
+    friend class utils::PrismThermalModelBuilder;
+    using Settings = PrismThermalModelExtractionSettings;
+    using BlockBC = typename BoundaryCondtionSettings::BlockBC;
+    using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
+    PrismThermalModel();
+    virtual ~PrismThermalModel() = default;
+
+    void Reset() { *this = PrismThermalModel(); }
+
+    void SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate);
+    SPtr<PrismTemplate> GetLayerPrismTemplate(IdType layer) const;
+
+    void AddBlockBC(Orientation ori, FBox2D box, ThermalBoundaryCondition bc);
+    const Vec<BlockBC> & GetBlockBCs(Orientation ori) const { return m_.blockBCs.at(ori); }
+
+    PrismLayer & AppendLayer(PrismLayer layer);
+    LineElement & AddLineElement(FCoord3D start, FCoord3D end, IdType netId, IdType matId, Float radius, Float current, ScenarioId scenId);
+    
+    void BuildPrismModel(Float scaleH2Unit, Float scale2Meter);
+    void AddBondingWires(CPtr<LayerStackupModel> stackupModel);
+    size_t TotalLayers() const { return m_.layers.size(); }
+    size_t TotalElements() const { return TotalLineElements() + TotalPrismElements(); }
+    size_t TotalLineElements() const { return m_.lines.size(); }
+    size_t TotalPrismElements() const { return m_.prisms.size(); }
+    IdType GlobalIndex(IdType layer, IdType element) const { return m_.indexOffset.at(layer) + element; }
+    Arr2<IdType> PrismLocalIndex(IdType globalIndex) const;
+    IdType AddPoint(FCoord3D point);
+    FCoord3D GetPoint(IdType lyrId, IdType elemId, IdType vtxId) const;
+
+    const auto & GetPoints() const { return m_.points; }
+    const auto & GetPoint(IdType idx) const { return m_.points[idx]; }
+    const auto & GetPrism(IdType idx) const { return m_.prisms[idx]; }
+    const auto & GetLineElement(IdType idx) const { return m_.lines[idx]; }
+    const auto & GetPrismElement(IdType layer, IdType element) const { return m_.layers[layer][element]; }
+
+    bool isTopLayer(IdType layer) const { return 0 == layer; }
+    bool isBotLayer(IdType layer) const { return 1 + layer == TotalLayers(); }
+    virtual void SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<IdType> & indices) const;
+private:
+    NS_SERIALIZATION_FUNCTIONS_DECLARATION;
+    NS_CLASS_MEMBERS_DEFINE(
         (Float, scaleH2Unit),
         (Float, scale2Meter),
         (CId<pkg::Layout>, layout),
+        (PrismThermalModelExtractionSettings, settings),
+        (Vec<FCoord3D>, points),
+        (Vec<LineElement>, lines),
+        (Vec<PrismInstance>, prisms),
+        (Vec<IdType>, indexOffset),
+        (HashMap<Orientation, Vec<BlockBC>>, blockBCs),
+        (HashMap<IdType, SPtr<PrismTemplate>>, prismTemplates),
         (Vec<PrismLayer>, layers)
     );
-
-    PrismThermalModel()
-    {
-        NS_INIT_HANA_STRUCT(*this);
-    }
 };
 
+inline Arr2<IdType> PrismThermalModel::PrismLocalIndex(IdType globalIndex) const
+{
+    IdType lyr = 0;
+    while (not (m_.indexOffset.at(lyr) <= globalIndex and globalIndex < m_.indexOffset.at(lyr + 1))) ++lyr;
+    return {lyr, globalIndex - m_.indexOffset.at(lyr)};
+}
+
+
 } // namespace nano::heat::model
+NS_SERIALIZATION_CLASS_EXPORT_KEY(nano::heat::model::PrismThermalModel)
