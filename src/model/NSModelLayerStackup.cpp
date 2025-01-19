@@ -124,26 +124,6 @@ const NPolygon & LayerStackupModel::GetLayoutBoundary() const
     return m_.polygons.front();
 }
 
-const auto & LayerStackupModel::GetAllPowerBlocks() const
-{
-    return m_.powerBlocks;
-}
-
-const auto & LayerStackupModel::GetAllPolygons() const
-{
-    return m_.polygons;
-}
-
-const auto & LayerStackupModel::GetSteinerPoints() const
-{
-    return m_.steinerPoints;
-}
-
-const auto & LayerStackupModel::GetAllBondingWires() const
-{
-    return m_.bondingWires;
-}
-
 SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(IdType layer) const
 {
     auto iter = m_.layerPolygons.find(layer);

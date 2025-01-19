@@ -95,10 +95,10 @@ public:
     IdType GetLayerIndexByHeight(Height height) const;
 
     const NPolygon & GetLayoutBoundary() const;
-    const auto & GetAllPowerBlocks() const;
-    const auto & GetAllPolygons() const;
-    const auto & GetSteinerPoints() const;
-    const auto & GetAllBondingWires() const;
+    const auto & GetAllPowerBlocks() const { return m_.powerBlocks; }
+    const auto & GetAllPolygons() const { return m_.polygons; }
+    const auto & GetSteinerPoints() const { return m_.steinerPoints; }
+    const auto & GetAllBondingWires() const { return m_.bondingWires; }
     SPtr<PolygonIds> GetLayerPolygonIds(IdType layer) const;
     IdType GetMaterialId(IdType polygon) const;
     IdType GetNetId(IdType polygon) const;
