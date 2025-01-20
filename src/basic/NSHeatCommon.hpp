@@ -24,6 +24,9 @@ struct ThermalBoundaryCondition
         this->type = type;
         this->value = value;
     }
+
+    bool isValid() const { return nano::isValid(value); }
+
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
     template <typename Archive>
@@ -99,8 +102,7 @@ struct BoundaryCondtionSettings
     using BlockBC = std::pair<FBox2D, ThermalBoundaryCondition>;
     using BlockBCs = Vec<BlockBC>;
     BOOST_HANA_DEFINE_STRUCT(BoundaryCondtionSettings,
-        (BC, topUniformBC),
-        (BC, botUniformBC),
+        (Arr2<BC>, uniformBCs),//[top, bot]
         (Arr2<BlockBCs>, blockBCs),//[top, bot]
         (TempUnit, envTemperature)
     );
