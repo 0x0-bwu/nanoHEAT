@@ -1,9 +1,13 @@
 #include "NSModelPrismThermal.h"
 NS_SERIALIZATION_CLASS_EXPORT_IMP(nano::heat::model::PrismThermalModel)
 
+#include "utils/NSModelPrismThermalQuery.h"
+#include "NSModelLayerStackup.h"
+
 namespace nano::heat::model {
 
 inline static constexpr auto NO_NEIGHBOR = generic::geometry::tri::noNeighbor;
+
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     
 template <typename Archive>
@@ -34,9 +38,14 @@ SPtr<PrismThermalModel::PrismTemplate> PrismThermalModel::GetLayerPrismTemplate(
     return iter != m_.prismTemplates.cend() ? iter->second : nullptr;
 }
 
-void PrismThermalModel::AddBlockBC(Orientation ori, FBox2D box, ThermalBoundaryCondition bc)
+void PrismThermalModel::SetUniformBC(Orientation ori, BC bc)
 {
-    m_.blockBCs[ori].emplace_back(box, bc);
+    m_.uniformBCs.emplace(ori, std::move(bc));
+}
+
+void PrismThermalModel::AddBlockBC(Orientation ori, NBox2D box, BC bc)
+{
+    m_.blockBCs[ori].emplace_back(std::move(box), std::move(bc));
 }
 
 PrismLayer & PrismThermalModel::AppendLayer(PrismLayer layer)
@@ -125,7 +134,40 @@ void PrismThermalModel::BuildPrismModel(Float scaleH2Unit, Float scale2Meter)
 
 void PrismThermalModel::AddBondingWires(CPtr<LayerStackupModel> stackupModel)
 {
-    //todo
+    const auto & bws = stackupModel->GetAllBondingWires();
+    if (bws.empty()) return;
+
+    utils::PrismThermalModelQuery query(*this);
+    for (const auto & bw : bws) {
+        const auto & pts = bw.pt2ds;
+        NS_ASSERT(pts.size() == bw.heights.size());
+        for (size_t curr = 0; curr < pts.size() - 1; ++curr) {
+            auto next = curr + 1;
+            auto p1 = FCoord3D(pts.at(curr)[0] * m_.scaleH2Unit, pts.at(curr)[1] * m_.scaleH2Unit, bw.heights.at(curr));
+            auto p2 = FCoord3D(pts.at(next)[0] * m_.scaleH2Unit, pts.at(next)[1] * m_.scaleH2Unit, bw.heights.at(next));
+            auto & line = AddLineElement(std::move(p1), std::move(p2), bw.netId, bw.matId, bw.radius, bw.current, bw.scenario);
+            //connection
+            if (0 == curr) {
+                Vec<utils::PrismThermalModelQuery::RtVal> results;
+                auto layer = stackupModel->GetLayerIndexByHeight(stackupModel->GetHeight(bw.heights.front()));
+                query.SearchNearestPrismInstances(layer, pts.at(curr), 1, results);
+                NS_ASSERT(results.size() == 1)
+                std::for_each(results.begin(), results.end(), [&](const auto & r) { line.neighbors.front().push_back(r.second); });
+            }
+            else {
+                auto & prevLine = m_.lines.at(m_.lines.size() - 2);
+                line.neighbors.front().emplace_back(prevLine.id);
+                prevLine.neighbors.back().emplace_back(line.id);
+            }
+            if (next == pts.size() - 1) {
+                Vec<utils::PrismThermalModelQuery::RtVal> results;
+                auto layer = stackupModel->GetLayerIndexByHeight(stackupModel->GetHeight(bw.heights.back()));
+                query.SearchNearestPrismInstances(layer, pts.at(next), 1, results);
+                NS_ASSERT(results.size() == 1)
+                std::for_each(results.begin(), results.end(), [&](const auto & r) { line.neighbors.back().push_back(r.second); });
+            }
+        }
+    }
 }
 
 IdType PrismThermalModel::AddPoint(FCoord3D point)
@@ -150,7 +192,16 @@ FCoord3D PrismThermalModel::GetPoint(IdType lyrId, IdType elemId, IdType vtxId) 
 
 void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<IdType> & indices) const
 {
-    //todo
+    indices.resize(monitors.size());
+    utils::PrismThermalModelQuery query(*this);
+    for (size_t i = 0; i < monitors.size(); ++i) {
+        const auto & point = monitors.at(i);
+        auto layer = query.NearestLayer(point[2]);
+        Vec<typename utils::PrismThermalModelQuery::RtVal> results;
+        NCoord2D p(point[0] / m_.scaleH2Unit, point[1] / m_.scaleH2Unit);
+        query.SearchNearestPrismInstances(layer, p, 1, results);
+        indices[i] = results.front().second;
+    }
 }
             
 

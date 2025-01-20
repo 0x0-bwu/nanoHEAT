@@ -2,12 +2,12 @@
 #include <nano/common>
 #include "basic/NSHeatCommon.hpp"
 #include "generic/geometry/Triangulation.hpp"
-
 namespace nano::heat::model {
 
 class LayerStackupModel;
 namespace utils {
 class PrismThermalModelBuilder;
+class PrismThermalModelQuery;
 } // namespace utils
 
 namespace pkg = nano::package;
@@ -191,9 +191,11 @@ struct PrismInstance
 class PrismThermalModel
 {
 public:
+    friend class utils::PrismThermalModelQuery;
     friend class utils::PrismThermalModelBuilder;
     using Settings = PrismThermalModelExtractionSettings;
-    using BlockBC = typename BoundaryCondtionSettings::BlockBC;
+    using BC = typename BoundaryCondtionSettings::BC;
+    using BlockBC = std::pair<NBox2D, BC>;
     using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
     PrismThermalModel();
     virtual ~PrismThermalModel() = default;
@@ -203,7 +205,8 @@ public:
     void SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate);
     SPtr<PrismTemplate> GetLayerPrismTemplate(IdType layer) const;
 
-    void AddBlockBC(Orientation ori, FBox2D box, ThermalBoundaryCondition bc);
+    void SetUniformBC(Orientation ori, BC bc);
+    void AddBlockBC(Orientation ori, NBox2D box, BC bc);
     const Vec<BlockBC> & GetBlockBCs(Orientation ori) const { return m_.blockBCs.at(ori); }
 
     PrismLayer & AppendLayer(PrismLayer layer);
@@ -240,6 +243,7 @@ private:
         (Vec<LineElement>, lines),
         (Vec<PrismInstance>, prisms),
         (Vec<IdType>, indexOffset),
+        (HashMap<Orientation, BC>, uniformBCs),
         (HashMap<Orientation, Vec<BlockBC>>, blockBCs),
         (HashMap<IdType, SPtr<PrismTemplate>>, prismTemplates),
         (Vec<PrismLayer>, layers)

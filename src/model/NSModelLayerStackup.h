@@ -7,11 +7,13 @@ namespace nano::heat::model {
 
 namespace utils {
 class LayerStackupModelBuilder;
+class LayerStackupModelQuery;
 } // namespace utils
 
 class LayerStackupModel
 {
 public:
+    friend class utils::LayerStackupModelQuery;
     friend class utils::LayerStackupModelBuilder;
     using Height = int;
     using PolygonIds = Vec<IdType>;
