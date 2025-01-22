@@ -85,7 +85,7 @@ void PrismThermalModel::BuildPrismModel(Float scaleH2Unit, Float scale2Meter)
         return iter->second;
     }; 
 
-    auto total = TotalPrismElements();
+    const auto total = m_.indexOffset.back();
     m_.points.clear();
     m_.prisms.reserve(total);
     for (size_t i = 0; i < total; ++i) {

@@ -63,7 +63,7 @@ test_suite * create_nano_heat_model_test_suite()
     test_suite * model_suite = BOOST_TEST_SUITE("s_heat_model_test");
     //
     model_suite->add(BOOST_TEST_CASE(&t_build_layer_stackup_model));
-    // model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model));
+    model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model));
     //
     return model_suite;
 }
