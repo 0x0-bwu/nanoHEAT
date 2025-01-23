@@ -46,9 +46,14 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
     auto stackupModel = CreateLayerStackupModel(layout, settings.layerSettings);
     if (not stackupModel) return false;
 
+    return Build(layout, stackupModel.get(), settings.meshSettings, settings.bcSettings);
+}
+
+bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+{
     auto triangulation = std::make_shared<typename PrismThermalModel::PrismTemplate>();
     const auto & coordUnit = layout->GetCoordUnit();
-    if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, settings.meshSettings, *triangulation)) return false;
+    if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation)) return false;
     NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
     for (IdType layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
@@ -134,11 +139,10 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
     m_model.BuildPrismModel(scaleH2Unit, scale2Meter);
     NS_TRACE("total prism elements: %1%", m_model.TotalPrismElements());
 
-    m_model.AddBondingWires(stackupModel.get());
+    m_model.AddBondingWires(stackupModel);
     NS_TRACE("total line elements: %1%", m_model.TotalLineElements());
 
     // bc
-    const auto & bcSettings = settings.bcSettings;
     if (bcSettings.uniformBCs[0].isValid())
         m_model.SetUniformBC(Orientation::Top, bcSettings.uniformBCs[0]);
     if (bcSettings.uniformBCs[1].isValid())
@@ -153,7 +157,7 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
         m_model.AddBlockBC(Orientation::Bot, coordUnit.toCoord(block.first), block.second);
     }
         
-    if (settings.meshSettings.dumpMeshFile) { 
+    if (meshSettings.dumpMeshFile) { 
         auto meshFile = std::string(nano::CurrentDir().data()) + "/mesh.vtk";
         // io::GenerateVTKFile<Float>(meshFile, *m_model);
     }

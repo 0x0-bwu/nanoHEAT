@@ -16,7 +16,7 @@ void t_build_layer_stackup_model()
 {
     using namespace nano::heat;
     using namespace nano::package;
-    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.xml";
+    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.xml";
     auto res = Database::Load(filename, ArchiveFormat::XML);
     BOOST_CHECK(res);
 
@@ -34,6 +34,8 @@ void t_build_layer_stackup_model()
     auto model = model::CreateLayerStackupModel(layout, LayerStackupModelExtractionSettings());
     BOOST_CHECK(model);
 
+    auto modelFile = std::string(nano::CurrentDir()) + "/model.stackup.bin";
+    model->Save(modelFile, ArchiveFormat::BIN);
     Database::Shutdown();
 }
 
@@ -41,20 +43,42 @@ void t_build_prism_thermal_model()
 {
     using namespace nano::heat;
     using namespace nano::package;
-    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.xml";
+    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.xml";
     auto res = Database::Load(filename, ArchiveFormat::XML);
     BOOST_CHECK(res);
 
-    auto pred = [](const auto & p) { return p.GetName() == "CAS300M12BM2"; };
-    auto pkg = nano::Find<Package>(pred);
+    auto pkg = nano::Find<Package>([](const auto & p) { return p.GetName() == "CAS300M12BM2"; });
     BOOST_CHECK(pkg);
 
     auto layout = pkg->GetTop()->GetFlattenedLayout();
     BOOST_CHECK(layout);
+
+    model::LayerStackupModel stackupModel;
+    auto stackupModelFile = std::string(nano::CurrentDir()) + "/model.stackup.bin";
+    res = stackupModel.Load(stackupModelFile, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
     
-    auto model = model::CreatePrismThermalModel(layout, PrismThermalModelExtractionSettings());
+    PrismMeshSettings meshSettings;
+    meshSettings.minAlpha = 20;
+    meshSettings.minLen = 1e-3;
+    meshSettings.maxLen = 1;
+    meshSettings.tolerance = 0;
+    meshSettings.maxIter = 1e5;
+    meshSettings.dumpMeshFile = true;
+
+    Float htc = 5000;
+    BoundaryCondtionSettings bcSettings;
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({-29.35,   4.70}, {-20.35,   8.70}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({-29.35, - 8.70}, {-20.35, - 4.70}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({  2.75,  11.50}, {  9.75,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({  2.75, -17.00}, {  9.75, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75,  11.50}, {- 2.55,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75, -17.00}, {- 2.55, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
+    auto model = model::CreatePrismThermalModel(layout, &stackupModel, meshSettings, bcSettings);
     BOOST_CHECK(model);
 
+    auto vtkFile = std::string(nano::CurrentDir()) + "/prism.vtk";
+    model->WriteVTK<Float>(vtkFile);
     Database::Shutdown();
 }
 

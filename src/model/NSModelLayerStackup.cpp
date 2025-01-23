@@ -1,4 +1,7 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "NSModelLayerStackup.h"
+#pragma GCC diagnostic pop
 NS_SERIALIZATION_CLASS_EXPORT_IMP(nano::heat::model::LayerStackupModel)
 #include "generic/geometry/GeometryIO.hpp"
 #include <set>
@@ -21,6 +24,20 @@ LayerStackupModel::LayerStackupModel()
 {
     NS_CLASS_MEMBERS_INITIALIZE
 }
+
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
+bool LayerStackupModel::Save(std::string_view filename, ArchiveFormat fmt) const
+{
+    return generic::archive::Save(*this, CURRENT_VERSION.toInt(), filename, fmt);
+}
+
+bool LayerStackupModel::Load(std::string_view filename, ArchiveFormat fmt)
+{
+    unsigned int version{0};
+    return generic::archive::Load(*this, version, filename, fmt);
+}
+
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
 
 bool LayerStackupModel::WritePNG(std::string_view filename, size_t width) const
 {

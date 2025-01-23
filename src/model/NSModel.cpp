@@ -19,4 +19,13 @@ UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, Pri
     return nullptr;
 }
 
+UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+{
+    auto model = std::make_unique<PrismThermalModel>();
+    if (utils::PrismThermalModelBuilder(*model).Build(layout, stackupModel, std::move(meshSettings), std::move(bcSettings)))
+        return model;
+    return nullptr;
+}
+
+
 } // namespace nano::heat::model

@@ -201,6 +201,9 @@ public:
     virtual ~PrismThermalModel() = default;
 
     void Reset() { *this = PrismThermalModel(); }
+    
+    template <typename Scalar>
+    bool WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature = nullptr, std::string * err = nullptr);
 
     void SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate);
     SPtr<PrismTemplate> GetLayerPrismTemplate(IdType layer) const;
