@@ -89,6 +89,10 @@ public:
     LayerStackupModel();
     virtual ~LayerStackupModel() = default;
     void Reset() { *this = LayerStackupModel(); }
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
+    bool Save(std::string_view filename, ArchiveFormat fmt) const;
+    bool Load(std::string_view filename, ArchiveFormat fmt);
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
     bool WritePNG(std::string_view filename, size_t witth = 1024) const;
     void BuildLayerPolygonLUT(Float transitionRatio);
     size_t TotalLayers() const;

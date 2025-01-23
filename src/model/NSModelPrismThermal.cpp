@@ -4,6 +4,8 @@ NS_SERIALIZATION_CLASS_EXPORT_IMP(nano::heat::model::PrismThermalModel)
 #include "utils/NSModelPrismThermalQuery.h"
 #include "NSModelLayerStackup.h"
 
+#include "generic/tools/FileSystem.hpp"
+
 namespace nano::heat::model {
 
 inline static constexpr auto NO_NEIGHBOR = generic::geometry::tri::noNeighbor;
@@ -204,6 +206,69 @@ void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec
     }
 }
             
+template <typename Scalar>
+bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature, std::string * err)
+{
+    if (not generic::fs::CreateDir(generic::fs::DirName(filename))) {
+        if (err) *err = "Error: fail to create folder " + generic::fs::DirName(filename).string();
+        return false;
+    }
 
+    std::ofstream out(filename.data());
+    if (not out.is_open()){
+        if (err) *err = "Error: fail to open: " + std::string(filename);
+        return false;
+    }
+
+    char sp(32);
+    out << "# vtk DataFile Version 2.0" << NS_EOL;
+    out << "Unstructured Grid" << NS_EOL;
+    out << "ASCII" << NS_EOL;
+    out << "DATASET UNSTRUCTURED_GRID" << NS_EOL;
+    
+    out << "POINTS" << sp << m_.points.size() << sp << "FLOAT" << NS_EOL;
+    for(const auto & point : m_.points){
+        out << point[0] << sp << point[1] << sp << point[2] << NS_EOL;
+    }
+
+    out << NS_EOL; 
+    out << "CELLS" << sp << this->TotalElements() << sp << this->TotalPrismElements() * 7 + this->TotalLineElements() * 3 << NS_EOL;
+    for (const auto & prism : m_.prisms) {
+        out << '6';
+        for (auto vertex : prism.vertices)
+            out << sp << vertex;
+        out << NS_EOL; 
+    }
+    for (const auto & line : m_.lines) {
+        const auto & endPts = line.endPts;
+        out << '2' << sp << endPts.front() << sp << endPts.back() << NS_EOL;
+    }
+    out << NS_EOL;
+
+    out << "CELL_TYPES" << sp << this->TotalElements() << NS_EOL;
+    for (size_t i = 0; i < this->TotalPrismElements(); ++i) out << "13" << NS_EOL;
+    for (size_t i = 0; i < this->TotalLineElements(); ++i) out << "3" << NS_EOL;
+
+    if (temperature && temperature->size() == this->TotalElements()) {
+        out << "CELL_DATA" << sp << this->TotalElements() << NS_EOL;
+        out << "SCALARS SCALARS FLOAT 1 " << NS_EOL;
+        out << "LOOKUP_TABLE TEMPERATURE" << NS_EOL;
+        for (const auto & t : *temperature) out << t << NS_EOL;
+
+        out << NS_EOL;
+        out << "LOOKUP_TABLE TEMPERATURE 100" << NS_EOL;
+        int r, g, b;
+        for (size_t i = 0; i < 100; ++i) {
+            generic::color::RGBFromScalar(i * 0.01, r, g, b);
+            out << r / 255.0 << sp << g / 255.0 << sp << b / 255.0 << sp << 1.0 << NS_EOL;
+        }
+    }
+
+    out.close();
+    return true;
+}
+
+template bool PrismThermalModel::WriteVTK<Float32>(std::string_view filename, const std::vector<Float32> * temperature, std::string * err);
+template bool PrismThermalModel::WriteVTK<Float64>(std::string_view filename, const std::vector<Float64> * temperature, std::string * err);
 
 } // namespace nano::heat::model

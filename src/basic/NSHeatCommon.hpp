@@ -72,7 +72,7 @@ struct PrismMeshSettings
         (bool, dumpMeshFile),
         (bool, genMeshByLayer),
         (bool, imprintUpperLayer),
-        (Float, minAlpha),
+        (Float, minAlpha),// unit: degree
         (Float, minLen),
         (Float, maxLen),
         (Float, tolerance),
@@ -82,7 +82,9 @@ struct PrismMeshSettings
     PrismMeshSettings()
     {
         NS_INIT_HANA_STRUCT(*this);
-        minAlpha = 20;//degree
+        minAlpha = 15;
+        maxIter = 1e5;
+        minLen = 1e-3;
         maxLen = std::numeric_limits<Float>::max();
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
