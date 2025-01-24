@@ -18,8 +18,9 @@ void t_build_layer_stackup_model()
     auto res = Database::Load(filename, ArchiveFormat::BIN);
     BOOST_CHECK(res);
 
-    std::cout << nano::test::variables[BOOST_HANA_STRING("package_checksum")] << std::endl;
-    std::cout << Database::Current().Checksum() << std::endl;
+    auto saveChecksum = nano::test::variables[BOOST_HANA_STRING("package_checksum")];
+    auto loadChecksum = Database::Current().Checksum();
+    BOOST_CHECK(saveChecksum == loadChecksum);
 
     auto pred = [](const auto & p) { return p.GetName() == "CAS300M12BM2"; };
     IdVec<Package, NameLut> packages;
@@ -47,6 +48,10 @@ void t_build_prism_thermal_model()
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
     auto res = Database::Load(filename, ArchiveFormat::BIN);
     BOOST_CHECK(res);
+
+    auto saveChecksum = nano::test::variables[BOOST_HANA_STRING("package_checksum")];
+    auto loadChecksum = Database::Current().Checksum();
+    BOOST_CHECK(saveChecksum == loadChecksum);
 
     auto pkg = nano::Find<Package>([](const auto & p) { return p.GetName() == "CAS300M12BM2"; });
     BOOST_CHECK(pkg);
