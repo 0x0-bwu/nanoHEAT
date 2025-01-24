@@ -1,7 +1,5 @@
 #pragma once
-#define BOOST_TEST_INCLUDED
-#include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
+#include "TestCommon.hpp"
 #include <nano/db>
 
 #include "generic/tools/FileSystem.hpp"
@@ -16,9 +14,12 @@ void t_build_layer_stackup_model()
 {
     using namespace nano::heat;
     using namespace nano::package;
-    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.xml";
-    auto res = Database::Load(filename, ArchiveFormat::XML);
+    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
+    auto res = Database::Load(filename, ArchiveFormat::BIN);
     BOOST_CHECK(res);
+
+    std::cout << nano::test::variables[BOOST_HANA_STRING("package_checksum")] << std::endl;
+    std::cout << Database::Current().Checksum() << std::endl;
 
     auto pred = [](const auto & p) { return p.GetName() == "CAS300M12BM2"; };
     IdVec<Package, NameLut> packages;
@@ -43,8 +44,8 @@ void t_build_prism_thermal_model()
 {
     using namespace nano::heat;
     using namespace nano::package;
-    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.xml";
-    auto res = Database::Load(filename, ArchiveFormat::XML);
+    auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
+    auto res = Database::Load(filename, ArchiveFormat::BIN);
     BOOST_CHECK(res);
 
     auto pkg = nano::Find<Package>([](const auto & p) { return p.GetName() == "CAS300M12BM2"; });
