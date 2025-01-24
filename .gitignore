@@ -1,4 +1,5 @@
 build
+build.release
 .vscode
 .DS_store
 test/data/archive
