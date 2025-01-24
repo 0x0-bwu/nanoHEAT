@@ -65,9 +65,9 @@ void t_build_prism_thermal_model()
     BOOST_CHECK(res);
     
     PrismMeshSettings meshSettings;
-    meshSettings.minAlpha = 20;
+    meshSettings.minAlpha = 15;
     meshSettings.minLen = 1e-3;
-    meshSettings.maxLen = 1;
+    meshSettings.maxLen = 3;
     meshSettings.tolerance = 0;
     meshSettings.maxIter = 1e5;
     meshSettings.dumpMeshFile = true;
