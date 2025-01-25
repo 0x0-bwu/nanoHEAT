@@ -33,7 +33,9 @@ void t_build_layer_stackup_model()
     auto layout = pkg->GetTop()->GetFlattenedLayout();
     BOOST_CHECK(layout);
     
-    auto model = model::CreateLayerStackupModel(layout, LayerStackupModelExtractionSettings());
+    LayerStackupModelExtractionSettings settings;
+    // settings.addCircleCenterAsSteinerPoint = true;
+    auto model = model::CreateLayerStackupModel(layout, settings);
     BOOST_CHECK(model);
 
     auto modelFile = std::string(nano::CurrentDir()) + "/model.stackup.bin";
@@ -66,10 +68,10 @@ void t_build_prism_thermal_model()
     
     PrismMeshSettings meshSettings;
     meshSettings.minAlpha = 15;
-    meshSettings.minLen = 1e-3;
-    meshSettings.maxLen = 3;
-    meshSettings.tolerance = 0;
-    meshSettings.maxIter = 1e5;
+    meshSettings.minLen = 0.01;
+    meshSettings.maxLen = 3.00;
+    meshSettings.tolerance = 1e-2;
+    meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
 
     Float htc = 5000;
