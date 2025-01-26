@@ -14,8 +14,8 @@ bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerP
                   const PrismMeshSettings & meshSettings, typename PrismThermalModel::PrismTemplate & triangulation)
 {
     if (meshSettings.dumpMeshFile) {
-        GeometryIO::WritePNG(std::string(nano::CurrentDir().data()) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
-        GeometryIO::WriteWKT<NPolygon>(std::string(nano::CurrentDir().data()) + "/meshIn.wkt", polygons.begin(), polygons.end());
+        GeometryIO::WritePNG(std::string(nano::CurrentDir()) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
+        GeometryIO::WriteWKT<NPolygon>(std::string(nano::CurrentDir()) + "/meshIn.wkt", polygons.begin(), polygons.end());
     }
     auto minAlpha = generic::math::Rad(meshSettings.minAlpha);
     auto minLen = coordUnit.toCoord(meshSettings.minLen);
@@ -33,7 +33,7 @@ bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerP
     mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
     mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
     if (meshSettings.dumpMeshFile)
-        GeometryIO::WritePNG(std::string(nano::CurrentDir().data()) + "/meshOut.png", triangulation, 4096);
+        GeometryIO::WritePNG(std::string(nano::CurrentDir()) + "/meshOut.png", triangulation, 4096);
     return true;
 }
 
@@ -160,8 +160,8 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     }
         
     if (meshSettings.dumpMeshFile) { 
-        auto meshFile = std::string(nano::CurrentDir().data()) + "/mesh.vtk";
-        // io::GenerateVTKFile<Float>(meshFile, *m_model);
+        auto meshFile = std::string(nano::CurrentDir()) + "/mesh.vtk";
+        m_model.WriteVTK<Float>(meshFile);
     }
     return true;
 }

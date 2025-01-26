@@ -45,6 +45,14 @@ void PrismThermalModel::SetUniformBC(Orientation ori, BC bc)
     m_.uniformBCs.emplace(ori, std::move(bc));
 }
 
+CPtr<PrismThermalModel::BC> PrismThermalModel::GetUniformBC(Orientation ori) const
+{
+    auto iter = m_.uniformBCs.find(ori);
+    if (iter == m_.uniformBCs.cend()) return nullptr;
+    if (not iter->second.isValid()) return nullptr;
+    return &iter->second;
+}
+
 void PrismThermalModel::AddBlockBC(Orientation ori, NBox2D box, BC bc)
 {
     m_.blockBCs[ori].emplace_back(std::move(box), std::move(bc));
@@ -192,6 +200,21 @@ FCoord3D PrismThermalModel::GetPoint(IdType lyrId, IdType elemId, IdType vtxId) 
     return FCoord3D(pt2d[0] * m_.scaleH2Unit, pt2d[1] * m_.scaleH2Unit, height);
 }
 
+bool PrismThermalModel::isPrism(IdType index) const
+{
+    return index < TotalPrismElements();
+}
+
+Float PrismThermalModel::CoordScale2Meter(int order) const
+{
+    return std::pow(m_.scaleH2Unit * m_.scale2Meter, order);
+}
+
+Float PrismThermalModel::UnitScale2Meter(int order) const
+{
+    return std::pow(m_.scale2Meter, order);
+}
+
 void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<IdType> & indices) const
 {
     indices.resize(monitors.size());
@@ -207,7 +230,7 @@ void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec
 }
             
 template <typename Scalar>
-bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature, std::string * err)
+bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature, std::string * err) const
 {
     if (not generic::fs::CreateDir(generic::fs::DirName(filename))) {
         if (err) *err = "Error: fail to create folder " + generic::fs::DirName(filename).string();
@@ -268,7 +291,7 @@ bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Sc
     return true;
 }
 
-template bool PrismThermalModel::WriteVTK<Float32>(std::string_view filename, const std::vector<Float32> * temperature, std::string * err);
-template bool PrismThermalModel::WriteVTK<Float64>(std::string_view filename, const std::vector<Float64> * temperature, std::string * err);
+template bool PrismThermalModel::WriteVTK<Float32>(std::string_view filename, const std::vector<Float32> * temperature, std::string * err) const;
+template bool PrismThermalModel::WriteVTK<Float64>(std::string_view filename, const std::vector<Float64> * temperature, std::string * err) const;
 
 } // namespace nano::heat::model

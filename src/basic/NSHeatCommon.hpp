@@ -1,6 +1,9 @@
 #pragma once
 #include <nano/common>
 #include "NSHeatAlias.hpp"
+
+#include <functional>
+
 namespace nano::heat {
 
 enum class Orientation { Top, Bot };
@@ -8,7 +11,7 @@ enum class Orientation { Top, Bot };
 
 struct ThermalBoundaryCondition
 {
-    enum class Type { HTC, HEAT_FLUX, /*TEMPERATURE*/ };
+    enum class Type { HTC, HEAT_FLUX, TEMPERATURE };
     BOOST_HANA_DEFINE_STRUCT(ThermalBoundaryCondition,
         (Type, type),
         (Float, value)
@@ -129,6 +132,7 @@ struct BoundaryCondtionSettings
     }
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
+
 struct PrismThermalModelExtractionSettings
 {
 
@@ -153,4 +157,59 @@ struct PrismThermalModelExtractionSettings
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
+struct PrismThermalSimulationSetup
+{
+    BOOST_HANA_DEFINE_STRUCT(PrismThermalSimulationSetup,
+        (Vec<FCoord3D>, monitors),
+        (TempUnit, envTemperature)
+    );
+    PrismThermalSimulationSetup()
+    {
+        NS_INIT_HANA_STRUCT(*this);
+        envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+    }
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        NS_UNUSED(version);
+        NS_SERIALIZATION_HANA_STRUCT(ar, *this);
+    }
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
+};
+
+struct ThermalNetworkStaticSolverSettings
+{
+    BOOST_HANA_DEFINE_STRUCT(ThermalNetworkStaticSolverSettings,
+        (bool, maximumRes),
+        (bool, dumpHotmap),
+        (bool, dumpResult),
+        (Float, residual),
+        (size_t, maxIter),
+        (Vec<IdType>, probs),
+        (TempUnit, envT)
+    );
+    ThermalNetworkStaticSolverSettings()
+    {
+        NS_INIT_HANA_STRUCT(*this);
+        maximumRes = true;
+        dumpHotmap = true;
+        dumpResult = true;
+        residual = 1e-1;
+        maxIter = 10;
+        envT = TempUnit(25, TempUnit::Unit::Celsius);
+    }
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        NS_UNUSED(version);
+        NS_SERIALIZATION_HANA_STRUCT(ar, *this);
+    }
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
+};
+
+using ThermalTransientExcitation = std::function<Float(Float, ScenarioId)>; // ratio = f(t, scenarid), range=[0, 1]
 } // namespace nano::heat
