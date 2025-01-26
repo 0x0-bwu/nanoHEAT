@@ -203,16 +203,18 @@ public:
     void Reset() { *this = PrismThermalModel(); }
     
     template <typename Scalar>
-    bool WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature = nullptr, std::string * err = nullptr);
+    bool WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature = nullptr, std::string * err = nullptr) const;
 
     void SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate);
     SPtr<PrismTemplate> GetLayerPrismTemplate(IdType layer) const;
 
     void SetUniformBC(Orientation ori, BC bc);
+    CPtr<BC> GetUniformBC(Orientation ori) const;
     void AddBlockBC(Orientation ori, NBox2D box, BC bc);
     const Vec<BlockBC> & GetBlockBCs(Orientation ori) const { return m_.blockBCs.at(ori); }
 
     PrismLayer & AppendLayer(PrismLayer layer);
+    const PrismLayer & GetLayer(IdType layer) const { return m_.layers.at(layer); }
     LineElement & AddLineElement(FCoord3D start, FCoord3D end, IdType netId, IdType matId, Float radius, Float current, ScenarioId scenId);
     
     void BuildPrismModel(Float scaleH2Unit, Float scale2Meter);
@@ -222,15 +224,20 @@ public:
     size_t TotalLineElements() const { return m_.lines.size(); }
     size_t TotalPrismElements() const { return m_.prisms.size(); }
     IdType GlobalIndex(IdType layer, IdType element) const { return m_.indexOffset.at(layer) + element; }
-    Arr2<IdType> PrismLocalIndex(IdType globalIndex) const;
+    Arr2<IdType> PrismLocalIndex(IdType globalIndex) const;//[layer, element]
+    IdType LineLocalIndex(IdType globalIndex) const;
     IdType AddPoint(FCoord3D point);
     FCoord3D GetPoint(IdType lyrId, IdType elemId, IdType vtxId) const;
+    bool isPrism(IdType index) const;
 
     const auto & GetPoints() const { return m_.points; }
     const auto & GetPoint(IdType idx) const { return m_.points[idx]; }
     const auto & GetPrism(IdType idx) const { return m_.prisms[idx]; }
     const auto & GetLineElement(IdType idx) const { return m_.lines[idx]; }
     const auto & GetPrismElement(IdType layer, IdType element) const { return m_.layers[layer][element]; }
+
+    Float CoordScale2Meter(int order = 1) const;
+    Float UnitScale2Meter(int order = 1) const;  
 
     bool isTopLayer(IdType layer) const { return 0 == layer; }
     bool isBotLayer(IdType layer) const { return 1 + layer == TotalLayers(); }
@@ -259,6 +266,13 @@ inline Arr2<IdType> PrismThermalModel::PrismLocalIndex(IdType globalIndex) const
     while (not (m_.indexOffset.at(lyr) <= globalIndex and globalIndex < m_.indexOffset.at(lyr + 1))) ++lyr;
     return {lyr, globalIndex - m_.indexOffset.at(lyr)};
 }
+
+inline IdType PrismThermalModel::LineLocalIndex(IdType globalIndex) const
+{
+    NS_ASSERT(globalIndex >= TotalPrismElements());
+    return globalIndex - TotalPrismElements();
+}
+
 
 
 } // namespace nano::heat::model
