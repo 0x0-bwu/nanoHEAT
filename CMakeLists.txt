@@ -148,8 +148,10 @@ else()
 	include_directories(${EIGEN3_INCLUDE_DIR})
 endif()
 
-# Find package
+# Link PNG
 find_package(PNG REQUIRED)
+add_compile_definitions(GENERIC_BOOST_GIL_IO_PNG_SUPPORT)
+
 find_package(Threads REQUIRED)
 
 find_package(OpenMP)
