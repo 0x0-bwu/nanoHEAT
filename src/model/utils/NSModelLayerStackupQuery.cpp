@@ -24,12 +24,12 @@ IdType LayerStackupModelQuery::SearchPolygon(IdType layer, const NCoord2D & pt) 
 {
     if (not m_model.hasPolygon(layer)) return INVALID_ID;
 
-    std::vector<RtVal> results;
+    Vec<RtVal> results;
     m_rtrees.at(layer)->query(boost::geometry::index::intersects(NBox2D(pt, pt)), std::back_inserter(results));
     if (results.empty()) return INVALID_ID;
     const auto & polygons = m_model->polygons;
     auto cmp = [&](auto i1, auto i2){ return polygons.at(i1).Area() > polygons.at(i2).Area(); };
-    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> pq(cmp);
+    std::priority_queue<size_t, Vec<size_t>, decltype(cmp)> pq(cmp);
     for (const auto & result : results) {
         if (generic::geometry::Contains(polygons.at(result.second), pt))
             pq.emplace(result.second);

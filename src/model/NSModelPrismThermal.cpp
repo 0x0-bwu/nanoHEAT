@@ -230,7 +230,7 @@ void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec
 }
             
 template <typename Scalar>
-bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Scalar> * temperature, std::string * err) const
+bool PrismThermalModel::WriteVTK(std::string_view filename, const Vec<Scalar> * temperature, std::string * err) const
 {
     if (not generic::fs::CreateDir(generic::fs::DirName(filename))) {
         if (err) *err = "Error: fail to create folder " + generic::fs::DirName(filename).string();
@@ -291,7 +291,7 @@ bool PrismThermalModel::WriteVTK(std::string_view filename, const std::vector<Sc
     return true;
 }
 
-template bool PrismThermalModel::WriteVTK<Float32>(std::string_view filename, const std::vector<Float32> * temperature, std::string * err) const;
-template bool PrismThermalModel::WriteVTK<Float64>(std::string_view filename, const std::vector<Float64> * temperature, std::string * err) const;
+template bool PrismThermalModel::WriteVTK<Float32>(std::string_view filename, const Vec<Float32> * temperature, std::string * err) const;
+template bool PrismThermalModel::WriteVTK<Float64>(std::string_view filename, const Vec<Float64> * temperature, std::string * err) const;
 
 } // namespace nano::heat::model

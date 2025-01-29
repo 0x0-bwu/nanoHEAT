@@ -133,7 +133,7 @@ template <typename Scalar>
 inline MNA<SparseMatrix<Scalar>> makeMNA(const ThermalNetwork<Scalar> & network, const Vec<IdType> & probs = {})
 {
     using Matrix = SparseMatrix<Scalar>;
-    using Triplets = std::vector<Eigen::Triplet<Scalar>>;
+    using Triplets = Vec<Eigen::Triplet<Scalar>>;
 
     MNA<Matrix> m;
     const size_t ms = network.MatrixSize();
