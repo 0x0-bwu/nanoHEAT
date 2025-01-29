@@ -14,21 +14,21 @@ PrismThermalModelQuery::PrismThermalModelQuery(CRef<Model> model, bool lazyBuild
     }
 }
 
-void PrismThermalModelQuery::SearchPrismInstances(const NBox2D & area, std::vector<RtVal> & results) const
+void PrismThermalModelQuery::SearchPrismInstances(const NBox2D & area, Vec<RtVal> & results) const
 {
     results.clear();
     auto rtree = BuildIndexTree();
     rtree->query(boost::geometry::index::covered_by(area), std::back_inserter(results));
 }
 
-void PrismThermalModelQuery::SearchPrismInstances(IdType layer, const NBox2D & area, std::vector<RtVal> & results) const
+void PrismThermalModelQuery::SearchPrismInstances(IdType layer, const NBox2D & area, Vec<RtVal> & results) const
 {
     results.clear();
     auto rtree = BuildLayerIndexTree(layer);
     rtree->query(boost::geometry::index::covered_by(area), std::back_inserter(results));
 }
 
-void PrismThermalModelQuery::SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, std::vector<RtVal> & results) const
+void PrismThermalModelQuery::SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const
 {
     results.clear();
     auto rtree = BuildLayerIndexTree(layer);

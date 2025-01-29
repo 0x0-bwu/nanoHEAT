@@ -12,9 +12,9 @@ public:
     using Model = nano::heat::model::PrismThermalModel;
     explicit PrismThermalModelQuery(CRef<Model> model, bool lazyBuild = true);
     virtual ~PrismThermalModelQuery() = default;
-    void SearchPrismInstances(const NBox2D & area, std::vector<RtVal> & results) const;
-    void SearchPrismInstances(IdType layer, const NBox2D & area, std::vector<RtVal> & results) const;
-    void SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, std::vector<RtVal> & results) const;
+    void SearchPrismInstances(const NBox2D & area, Vec<RtVal> & results) const;
+    void SearchPrismInstances(IdType layer, const NBox2D & area, Vec<RtVal> & results) const;
+    void SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const;
     IdType NearestLayer(Float height) const;
 
 protected:
