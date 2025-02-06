@@ -5,13 +5,13 @@
 #include "model/NSModelTraits.hpp"
 namespace nano::heat::solver {
 
-Pair<Set<IdType>, Vec<IdType>> GetProbsAndPermutation(const Vec<IdType> & indices)
+Pair<Set<Index>, Vec<Index>> GetProbsAndPermutation(const Vec<Index> & indices)
 {
-    IdType index{0};
-    Set<IdType> probs(indices.begin(), indices.end());
-    HashMap<IdType, IdType> indexMap;
+    Index index{0};
+    Set<Index> probs(indices.begin(), indices.end());
+    HashMap<Index, Index> indexMap;
     for (auto prob : probs) indexMap.emplace(prob, index++);
-    Vec<IdType> permutation; permutation.reserve(indices.size());
+    Vec<Index> permutation; permutation.reserve(indices.size());
     for (auto index : indices) permutation.emplace_back(indexMap.at(index));
     return std::make_pair(probs, permutation);
 }
@@ -30,7 +30,7 @@ Scalar CalculateResidual(const Vec<Scalar> & v1, const Vec<Scalar> & v2, bool ma
 }
 
 template <typename ThermalNetworkBuilder>
-bool ThermalNetworkStaticSolver::Solve(const typename ThermalNetworkBuilder::ModelType * model, Vec<Scalar> & results) const
+bool ThermalNetworkStaticSolver::Solve(CPtr<typename ThermalNetworkBuilder::ModelType> model, Vec<Scalar> & results) const
 {
     NS_ASSERT(model);
     auto envT = settings.envT.inKelvins();
@@ -73,6 +73,8 @@ bool ThermalNetworkStaticSolver::Solve(const typename ThermalNetworkBuilder::Mod
     }
     return true;
 }
+
+template bool ThermalNetworkStaticSolver::Solve<utils::PrismThermalNetworkBuilder<ThermalNetworkStaticSolver::Scalar>>(CPtr<model::PrismThermalModel> model, Vec<ThermalNetworkStaticSolver::Scalar> & results) const;
 
 PrismThermalNetworkStaticSolver::PrismThermalNetworkStaticSolver(CPtr<model::PrismThermalModel> model)
  : m_model(model)

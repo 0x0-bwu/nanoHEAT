@@ -16,7 +16,7 @@ public:
     friend class utils::LayerStackupModelQuery;
     friend class utils::LayerStackupModelBuilder;
     using Height = int;
-    using PolygonIds = Vec<IdType>;
+    using PolygonIds = Vec<Index>;
     using Settings = nano::heat::LayerStackupModelExtractionSettings;
     struct LayerRange
     {
@@ -40,11 +40,11 @@ public:
 
     struct PowerBlock
     {
-        IdType polygon{std::numeric_limits<IdType>::max()};
+        Index polygon{std::numeric_limits<Index>::max()};
         LayerRange range;
         ScenarioId scen;
-        IdType powerLut;
-        PowerBlock(IdType polygon, LayerRange range, ScenarioId scenario, IdType powerLut)
+        Index powerLut;
+        PowerBlock(Index polygon, LayerRange range, ScenarioId scenario, Index powerLut)
          : polygon(polygon), range(range), scen(scenario), powerLut(powerLut) {}
         PowerBlock() = default;
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
@@ -65,8 +65,8 @@ public:
     {
         Float radius{0};
         Float current{0};
-        IdType netId{INVALID_ID};
-        IdType matId{INVALID_ID};
+        Index netId{INVALID_INDEX};
+        Index matId{INVALID_INDEX};
         ScenarioId scenario;
         Vec<Float> heights;
         Vec<NCoord2D> pt2ds;
@@ -96,48 +96,48 @@ public:
     bool WritePNG(std::string_view filename, size_t witth = 1024) const;
     void BuildLayerPolygonLUT(Float transitionRatio);
     size_t TotalLayers() const;
-    bool hasPolygon(IdType layer) const;
-    bool GetLayerHeightThickness(IdType layer, Float & elevation, Float & thickness) const;
-    IdType GetLayerIndexByHeight(Height height) const;
+    bool hasPolygon(Index layer) const;
+    bool GetLayerHeightThickness(Index layer, Float & elevation, Float & thickness) const;
+    Index GetLayerIndexByHeight(Height height) const;
 
     const NPolygon & GetLayoutBoundary() const;
     const auto & GetAllPowerBlocks() const { return m_.powerBlocks; }
     const auto & GetAllPolygons() const { return m_.polygons; }
     const auto & GetSteinerPoints() const { return m_.steinerPoints; }
     const auto & GetAllBondingWires() const { return m_.bondingWires; }
-    SPtr<PolygonIds> GetLayerPolygonIds(IdType layer) const;
-    IdType GetMaterialId(IdType polygon) const;
-    IdType GetNetId(IdType polygon) const;
+    SPtr<PolygonIds> GetLayerPolygonIds(Index layer) const;
+    Index GetMaterialId(Index polygon) const;
+    Index GetNetId(Index polygon) const;
 
     Height GetHeight(Float height) const;
     LayerRange GetLayerRange(Float elevation, Float thickness) const;
-    Vec<NPolygon> GetLayerPolygons(IdType layer) const;
+    Vec<NPolygon> GetLayerPolygons(Index layer) const;
 
     static bool SliceOverheightLayers(std::list<LayerRange> & ranges, Float ratio);
 
 private:
     NS_SERIALIZATION_FUNCTIONS_DECLARATION;
     NS_CLASS_MEMBERS_DEFINE(
-    (Vec<IdType>, nets),
-    (Vec<IdType>, materials),
+    (Vec<Index>, nets),
+    (Vec<Index>, materials),
     (Vec<NPolygon>, polygons),
     (Vec<NCoord2D>, steinerPoints),
     (Vec<LayerRange>, layerRanges),
     (Vec<BondingWire>, bondingWires),
-    (HashMap<IdType, PowerBlock>, powerBlocks),
-    (HashMap<IdType, SPtr<PolygonIds>>, layerPolygons),
-    (HashMap<Height, IdType>, height2indices),
+    (HashMap<Index, PowerBlock>, powerBlocks),
+    (HashMap<Index, SPtr<PolygonIds>>, layerPolygons),
+    (HashMap<Height, Index>, height2indices),
     (Vec<Height>, layerOrder),
     (Float, vScale2Int),
     (Settings, settings))
 };
 
-inline IdType LayerStackupModel::GetNetId(IdType pid) const
+inline Index LayerStackupModel::GetNetId(Index pid) const
 {
     return m_.nets.at(pid);
 }
 
-inline IdType LayerStackupModel::GetMaterialId(IdType pid) const
+inline Index LayerStackupModel::GetMaterialId(Index pid) const
 {
     return m_.materials.at(pid);
 }

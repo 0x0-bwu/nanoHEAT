@@ -38,6 +38,7 @@ UPtr<typename PrismThermalNetworkBuilder<Scalar>::Network> PrismThermalNetworkBu
     
     BuildLineElement(iniT, network.get());
     ApplyBlockBCs(network.get());
+    network->BuildIndexMap();
     return network;
 }
 
@@ -70,7 +71,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
         //edges
         for (size_t ie = 0; ie < 3; ++ie) {
             auto vArea = GetPrismSideArea(i, ie);
-            if (auto nid = neighbors.at(ie); INVALID_ID == nid) {
+            if (auto nid = neighbors.at(ie); INVALID_INDEX == nid) {
                 //todo, side bc
             }
             else if (i < nid) { //one way
@@ -93,7 +94,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
         auto hArea = GetPrismTopBotArea(i);
         //top
         auto nTop = neighbors.at(model::PrismElement::TOP_NEIGHBOR_INDEX);
-        if (INVALID_ID == nTop) {
+        if (INVALID_INDEX == nTop) {
             if (nullptr != topBC && topBC->isValid()) {
                 if (ThermalBoundaryCondition::Type::HTC == topBC->type) {
                     network->SetHTC(i, topBC->value * hArea);
@@ -122,7 +123,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
         }
         //bot
         auto nBot = neighbors.at(model::PrismElement::BOT_NEIGHBOR_INDEX);
-        if (INVALID_ID == nBot) {
+        if (INVALID_INDEX == nBot) {
             if (nullptr != botBC && botBC->isValid()) {
                 if (ThermalBoundaryCondition::Type::HTC == botBC->type) {
                     network->SetHTC(i, botBC->value * hArea);
@@ -218,7 +219,7 @@ void PrismThermalNetworkBuilder<Scalar>::ApplyBlockBCs(Ptr<Network> network) con
                 const auto & element = m_model->GetPrismElement(prism.layer, prism.element);
                 auto nid = isTop ? model::PrismElement::TOP_NEIGHBOR_INDEX : 
                                    model::PrismElement::BOT_NEIGHBOR_INDEX ;
-                if (element.neighbors.at(nid) != INVALID_ID) continue;
+                if (element.neighbors.at(nid) != INVALID_INDEX) continue;
                 auto area = GetPrismTopBotArea(result.second);
                 if (ThermalBoundaryCondition::Type::HEAT_FLUX == block.second.type) {
                     auto heatFlow = value * area;
@@ -246,20 +247,20 @@ void PrismThermalNetworkBuilder<Scalar>::ApplyBlockBCs(Ptr<Network> network) con
 }
 
 template <typename Scalar>
-const FCoord3D & PrismThermalNetworkBuilder<Scalar>::GetPrismVertexPoint(IdType index, IdType iv) const
+const FCoord3D & PrismThermalNetworkBuilder<Scalar>::GetPrismVertexPoint(Index index, Index iv) const
 {
     return m_model->GetPoint(m_model->GetPrism(index).vertices.at(iv));
 }
 
 template <typename Scalar>
-FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismVertexPoint2D(IdType index, IdType iv) const
+FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismVertexPoint2D(Index index, Index iv) const
 {
     const auto & pt3d = GetPrismVertexPoint(index, iv);
     return FCoord2D(pt3d[0], pt3d[1]);
 }
 
 template <typename Scalar>
-FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismCenterPoint2D(IdType index) const
+FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismCenterPoint2D(Index index) const
 {
     auto p0 = GetPrismVertexPoint2D(index, 0);
     auto p1 = GetPrismVertexPoint2D(index, 1);
@@ -268,7 +269,7 @@ FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismCenterPoint2D(IdType index)
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismCenterDist2Side(IdType index, IdType ie) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismCenterDist2Side(Index index, Index ie) const
 {
     ie %= 3;
     auto ct = GetPrismCenterPoint2D(index);
@@ -279,7 +280,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetPrismCenterDist2Side(IdType index, 
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(IdType index, IdType ie) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(Index index, Index ie) const
 {
     ie %= 3;
     auto p1 = GetPrismVertexPoint2D(index, ie);
@@ -289,7 +290,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(IdType index, IdTyp
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(IdType index, IdType ie) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(Index index, Index ie) const
 {
     auto h = GetPrismHeight(index);
     auto w = GetPrismEdgeLength(index, ie);
@@ -297,7 +298,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(IdType index, IdType 
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(Index index) const
 {
     const auto & points = m_model->GetPoints();
     const auto & vs = m_model->GetPrism(index).vertices;
@@ -306,20 +307,20 @@ Float PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(IdType index) const
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismVolume(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismVolume(Index index) const
 {
     return GetPrismTopBotArea(index) * GetPrismHeight(index);
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismHeight(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetPrismHeight(Index index) const
 {
     const auto & prism = m_model->GetPrism(index);
     return m_model->GetLayer(prism.layer).thickness * m_model->UnitScale2Meter();
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(IdType index, Float refT) const
+Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(Index index, Float refT) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     if (generic::math::EQ<Float>(line.current, 0)) return 0;
@@ -328,13 +329,13 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(IdType index, Float r
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineVolume(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetLineVolume(Index index) const
 {
     return GetLineArea(index) * GetLineLength(index);
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineLength(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetLineLength(Index index) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     const auto & p1 = m_model->GetPoint(line.endPts.front());
@@ -343,14 +344,14 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineLength(IdType index) const
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineArea(IdType index) const
+Float PrismThermalNetworkBuilder<Scalar>::GetLineArea(Index index) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     return generic::math::pi * std::pow(line.radius * m_model->UnitScale2Meter(), 2);
 }
 
 template <typename Scalar>
-Arr3<Float> PrismThermalNetworkBuilder<Scalar>::GetMatThermalConductivity(IdType matId, Float refT) const
+Arr3<Float> PrismThermalNetworkBuilder<Scalar>::GetMatThermalConductivity(Index matId, Float refT) const
 {
     Arr3<Float> result{0, 0 , 0};
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
@@ -363,7 +364,7 @@ Arr3<Float> PrismThermalNetworkBuilder<Scalar>::GetMatThermalConductivity(IdType
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetMatMassDensity(IdType matId, Float refT) const
+Float PrismThermalNetworkBuilder<Scalar>::GetMatMassDensity(Index matId, Float refT) const
 {
     Float result{0};
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
@@ -373,7 +374,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetMatMassDensity(IdType matId, Float 
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetMatSpecificHeat(IdType matId, Float refT) const
+Float PrismThermalNetworkBuilder<Scalar>::GetMatSpecificHeat(Index matId, Float refT) const
 {
     Float result{0};
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
@@ -383,7 +384,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetMatSpecificHeat(IdType matId, Float
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetMatResistivity(IdType matId, Float refT) const
+Float PrismThermalNetworkBuilder<Scalar>::GetMatResistivity(Index matId, Float refT) const
 {
     Float result{0};
     auto mat = Id<Material>(matId); { NS_ASSERT(mat); }

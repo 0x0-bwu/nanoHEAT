@@ -15,22 +15,22 @@ namespace pkg = nano::package;
 struct LineElement
 {
     BOOST_HANA_DEFINE_STRUCT(LineElement,
-        (IdType, id),
-        (IdType, netId),
-        (IdType, matId),
-        (IdType, scenId),
+        (Index, id),
+        (Index, netId),
+        (Index, matId),
+        (Index, scenId),
         (Float, radius),
         (Float, current),
-        (Arr2<IdType>, endPts),
-        (Arr2<Vec<IdType>>, neighbors)//global index
+        (Arr2<Index>, endPts),
+        (Arr2<Vec<Index>>, neighbors)//global index
     );
     LineElement()
     {
         NS_INIT_HANA_STRUCT(*this);
-        id = INVALID_ID;
-        netId = INVALID_ID;
-        matId = INVALID_ID;
-        endPts = {INVALID_ID, INVALID_ID};
+        id = INVALID_INDEX;
+        netId = INVALID_INDEX;
+        matId = INVALID_INDEX;
+        endPts = {INVALID_INDEX, INVALID_INDEX};
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
@@ -45,28 +45,28 @@ struct LineElement
 
 struct PrismElement
 {
-    inline static constexpr IdType TOP_NEIGHBOR_INDEX = 3;
-    inline static constexpr IdType BOT_NEIGHBOR_INDEX = 4;
+    inline static constexpr Index TOP_NEIGHBOR_INDEX = 3;
+    inline static constexpr Index BOT_NEIGHBOR_INDEX = 4;
     BOOST_HANA_DEFINE_STRUCT(PrismElement,
-        (IdType, id),
-        (IdType, netId),
-        (IdType, matId),
-        (IdType, scenId),
-        (IdType, templateId),
-        (IdType, powerLutId),
+        (Index, id),
+        (Index, netId),
+        (Index, matId),
+        (Index, scenId),
+        (Index, templateId),
+        (Index, powerLutId),
         (Float, powerRatio),
-        (Arr5<IdType>, neighbors)
+        (Arr5<Index>, neighbors)
     );
     PrismElement()
     {
         NS_INIT_HANA_STRUCT(*this);
-        id = INVALID_ID;
-        netId = INVALID_ID;
-        matId = INVALID_ID;
-        scenId = INVALID_ID;
-        templateId = INVALID_ID;
-        powerLutId = INVALID_ID;
-        neighbors.fill(INVALID_ID);
+        id = INVALID_INDEX;
+        netId = INVALID_INDEX;
+        matId = INVALID_INDEX;
+        scenId = INVALID_INDEX;
+        templateId = INVALID_INDEX;
+        powerLutId = INVALID_INDEX;
+        neighbors.fill(INVALID_INDEX);
     }
 
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
@@ -83,7 +83,7 @@ struct PrismElement
 struct PrismLayer
 {
     BOOST_HANA_DEFINE_STRUCT(PrismLayer,
-        (IdType, id),
+        (Index, id),
         (Float, elevation),
         (Float, thickness),
         (Vec<PrismElement>, elements)
@@ -92,18 +92,18 @@ protected:
     PrismLayer()
     {
         NS_INIT_HANA_STRUCT(*this);
-        id = INVALID_ID;
+        id = INVALID_INDEX;
     }
 public:
-    explicit PrismLayer(IdType id) : PrismLayer()
+    explicit PrismLayer(Index id) : PrismLayer()
     {
         this->id = id;
     }
 
-    PrismElement & operator[](IdType idx) { return elements[idx]; }
-    const PrismElement & operator[](IdType idx) const { return elements[idx]; }
+    PrismElement & operator[](Index idx) { return elements[idx]; }
+    const PrismElement & operator[](Index idx) const { return elements[idx]; }
 
-    PrismElement & AddElement(IdType templateId)
+    PrismElement & AddElement(Index templateId)
     {
         auto & elem = elements.emplace_back(PrismElement());
         elem.id = elements.size() - 1;
@@ -126,15 +126,15 @@ public:
 struct ContactInstance
 {
     BOOST_HANA_DEFINE_STRUCT(ContactInstance,
-        (IdType, id),
+        (Index, id),
         (Float, ratio)
     );
     ContactInstance()
     {
         NS_INIT_HANA_STRUCT(*this);
-        id = INVALID_ID;
+        id = INVALID_INDEX;
     }
-    ContactInstance(IdType id, Float ratio) : ContactInstance()
+    ContactInstance(Index id, Float ratio) : ContactInstance()
     {
         this->id = id;
         this->ratio = ratio;
@@ -155,23 +155,23 @@ using ContactInstances = Vec<ContactInstance>;
 struct PrismInstance
 {
     BOOST_HANA_DEFINE_STRUCT(PrismInstance,
-        (IdType, layer),
-        (IdType, element),
-        (Arr6<IdType>, vertices), // [top, bot]
-        (Arr5<IdType>, neighbors), //[edge1, edge2, edge3, top, bot]
+        (Index, layer),
+        (Index, element),
+        (Arr6<Index>, vertices), // [top, bot]
+        (Arr5<Index>, neighbors), //[edge1, edge2, edge3, top, bot]
         (Arr2<ContactInstances>, contacts)//[top, bot] only used for stackup prism model
     );
 
     PrismInstance()
     {
         NS_INIT_HANA_STRUCT(*this);
-        layer = INVALID_ID;
-        element = INVALID_ID;
-        vertices.fill(INVALID_ID);
-        neighbors.fill(INVALID_ID);
+        layer = INVALID_INDEX;
+        element = INVALID_INDEX;
+        vertices.fill(INVALID_INDEX);
+        neighbors.fill(INVALID_INDEX);
     }
 
-    PrismInstance(IdType layer, IdType element) : PrismInstance()
+    PrismInstance(Index layer, Index element) : PrismInstance()
     {
         this->layer = layer;
         this->element = element;
@@ -205,8 +205,10 @@ public:
     template <typename Scalar>
     bool WriteVTK(std::string_view filename, const Vec<Scalar> * temperature = nullptr, std::string * err = nullptr) const;
 
-    void SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate);
-    SPtr<PrismTemplate> GetLayerPrismTemplate(IdType layer) const;
+    CId<pkg::Layout> GetLayout() const { return m_.layout; }
+    
+    void SetLayerPrismTemplate(Index layer, SPtr<PrismTemplate> prismTemplate);
+    SPtr<PrismTemplate> GetLayerPrismTemplate(Index layer) const;
 
     void SetUniformBC(Orientation ori, BC bc);
     CPtr<BC> GetUniformBC(Orientation ori) const;
@@ -214,8 +216,8 @@ public:
     const Vec<BlockBC> & GetBlockBCs(Orientation ori) const { return m_.blockBCs.at(ori); }
 
     PrismLayer & AppendLayer(PrismLayer layer);
-    const PrismLayer & GetLayer(IdType layer) const { return m_.layers.at(layer); }
-    LineElement & AddLineElement(FCoord3D start, FCoord3D end, IdType netId, IdType matId, Float radius, Float current, ScenarioId scenId);
+    const PrismLayer & GetLayer(Index layer) const { return m_.layers.at(layer); }
+    LineElement & AddLineElement(FCoord3D start, FCoord3D end, Index netId, Index matId, Float radius, Float current, ScenarioId scenId);
     
     void BuildPrismModel(Float scaleH2Unit, Float scale2Meter);
     void AddBondingWires(CPtr<LayerStackupModel> stackupModel);
@@ -223,25 +225,25 @@ public:
     size_t TotalElements() const { return TotalLineElements() + TotalPrismElements(); }
     size_t TotalLineElements() const { return m_.lines.size(); }
     size_t TotalPrismElements() const { return m_.prisms.size(); }
-    IdType GlobalIndex(IdType layer, IdType element) const { return m_.indexOffset.at(layer) + element; }
-    Arr2<IdType> PrismLocalIndex(IdType globalIndex) const;//[layer, element]
-    IdType LineLocalIndex(IdType globalIndex) const;
-    IdType AddPoint(FCoord3D point);
-    FCoord3D GetPoint(IdType lyrId, IdType elemId, IdType vtxId) const;
-    bool isPrism(IdType index) const;
+    Index GlobalIndex(Index layer, Index element) const { return m_.indexOffset.at(layer) + element; }
+    Arr2<Index> PrismLocalIndex(Index globalIndex) const;//[layer, element]
+    Index LineLocalIndex(Index globalIndex) const;
+    Index AddPoint(FCoord3D point);
+    FCoord3D GetPoint(Index lyrId, Index elemId, Index vtxId) const;
+    bool isPrism(Index index) const;
 
     const auto & GetPoints() const { return m_.points; }
-    const auto & GetPoint(IdType idx) const { return m_.points[idx]; }
-    const auto & GetPrism(IdType idx) const { return m_.prisms[idx]; }
-    const auto & GetLineElement(IdType idx) const { return m_.lines[idx]; }
-    const auto & GetPrismElement(IdType layer, IdType element) const { return m_.layers[layer][element]; }
+    const auto & GetPoint(Index idx) const { return m_.points[idx]; }
+    const auto & GetPrism(Index idx) const { return m_.prisms[idx]; }
+    const auto & GetLineElement(Index idx) const { return m_.lines[idx]; }
+    const auto & GetPrismElement(Index layer, Index element) const { return m_.layers[layer][element]; }
 
     Float CoordScale2Meter(int order = 1) const;
     Float UnitScale2Meter(int order = 1) const;  
 
-    bool isTopLayer(IdType layer) const { return 0 == layer; }
-    bool isBotLayer(IdType layer) const { return 1 + layer == TotalLayers(); }
-    virtual void SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<IdType> & indices) const;
+    bool isTopLayer(Index layer) const { return 0 == layer; }
+    bool isBotLayer(Index layer) const { return 1 + layer == TotalLayers(); }
+    virtual void SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<Index> & indices) const;
 private:
     NS_SERIALIZATION_FUNCTIONS_DECLARATION;
     NS_CLASS_MEMBERS_DEFINE(
@@ -252,22 +254,22 @@ private:
         (Vec<FCoord3D>, points),
         (Vec<LineElement>, lines),
         (Vec<PrismInstance>, prisms),
-        (Vec<IdType>, indexOffset),
+        (Vec<Index>, indexOffset),
         (HashMap<Orientation, BC>, uniformBCs),
         (HashMap<Orientation, Vec<BlockBC>>, blockBCs),
-        (HashMap<IdType, SPtr<PrismTemplate>>, prismTemplates),
+        (HashMap<Index, SPtr<PrismTemplate>>, prismTemplates),
         (Vec<PrismLayer>, layers)
     );
 };
 
-inline Arr2<IdType> PrismThermalModel::PrismLocalIndex(IdType globalIndex) const
+inline Arr2<Index> PrismThermalModel::PrismLocalIndex(Index globalIndex) const
 {
-    IdType lyr = 0;
+    Index lyr = 0;
     while (not (m_.indexOffset.at(lyr) <= globalIndex and globalIndex < m_.indexOffset.at(lyr + 1))) ++lyr;
     return {lyr, globalIndex - m_.indexOffset.at(lyr)};
 }
 
-inline IdType PrismThermalModel::LineLocalIndex(IdType globalIndex) const
+inline Index PrismThermalModel::LineLocalIndex(Index globalIndex) const
 {
     NS_ASSERT(globalIndex >= TotalPrismElements());
     return globalIndex - TotalPrismElements();

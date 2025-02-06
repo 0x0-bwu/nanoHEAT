@@ -35,10 +35,10 @@ public:
         }
         Eigen::ConjugateGradient<SparseMatrix<Scalar>, Eigen::Lower|Eigen::Upper> solver(m.G);
         // x = m.L * solver.solveWithGauss(rhs, x);
-        x = m.L * solver.solve(rhs);
+        x = m.L * solver.solve(m.B * rhs);
         NS_TRACE("Eigen CG iterations: %1%", solver.iterations());
         NS_TRACE("Eigen CG error: %1%", solver.error());
-        for (size_t i = 0; i < x.size(); ++i) {
+        for (size_t i = 0; i < size_t(x.size()); ++i) {
             auto nid = network.NodeId(i);
             result[nid] = x[i];
         }

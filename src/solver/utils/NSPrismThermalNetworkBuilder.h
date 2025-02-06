@@ -27,32 +27,32 @@ public:
     UPtr<Network > Build(const Vec<Scalar> & iniT) const;
 
 protected:
-    virtual void BuildPrismElement(const Vec<Scalar> & iniT, Ptr<Network> network, IdType start, IdType end) const;
+    virtual void BuildPrismElement(const Vec<Scalar> & iniT, Ptr<Network> network, Index start, Index end) const;
     virtual void ApplyBlockBCs(Ptr<Network> network) const;
     void BuildLineElement(const Vec<Scalar> & iniT, Ptr<Network> network) const;
 
-    Arr3<Float> GetMatThermalConductivity(IdType matId, Float refT) const;
-    Float GetMatMassDensity(IdType matId, Float refT) const;
-    Float GetMatSpecificHeat(IdType matId, Float refT) const;
-    Float GetMatResistivity(IdType matId, Float refT) const;
+    Arr3<Float> GetMatThermalConductivity(Index matId, Float refT) const;
+    Float GetMatMassDensity(Index matId, Float refT) const;
+    Float GetMatSpecificHeat(Index matId, Float refT) const;
+    Float GetMatResistivity(Index matId, Float refT) const;
 
     /// global index
-    const FCoord3D & GetPrismVertexPoint(IdType index, IdType iv) const;
-    FCoord2D GetPrismVertexPoint2D(IdType index, IdType iv) const;
-    FCoord2D GetPrismCenterPoint2D(IdType index) const;
+    const FCoord3D & GetPrismVertexPoint(Index index, Index iv) const;
+    FCoord2D GetPrismVertexPoint2D(Index index, Index iv) const;
+    FCoord2D GetPrismCenterPoint2D(Index index) const;
 
     /// unit: SI
-    Float GetPrismCenterDist2Side(IdType index, IdType ie) const;
-    Float GetPrismEdgeLength(IdType index, IdType ie) const;
-    Float GetPrismSideArea(IdType index, IdType ie) const;
-    Float GetPrismTopBotArea(IdType index) const;
-    Float GetPrismVolume(IdType index) const;
-    Float GetPrismHeight(IdType index) const;
+    Float GetPrismCenterDist2Side(Index index, Index ie) const;
+    Float GetPrismEdgeLength(Index index, Index ie) const;
+    Float GetPrismSideArea(Index index, Index ie) const;
+    Float GetPrismTopBotArea(Index index) const;
+    Float GetPrismVolume(Index index) const;
+    Float GetPrismHeight(Index index) const;
 
-    Float GetLineJouleHeat(IdType index, Float refT) const;
-    Float GetLineVolume(IdType index) const;
-    Float GetLineLength(IdType index) const;
-    Float GetLineArea(IdType index) const;
+    Float GetLineJouleHeat(Index index, Float refT) const;
+    Float GetLineVolume(Index index) const;
+    Float GetLineLength(Index index) const;
+    Float GetLineArea(Index index) const;
 
 protected:
     CPtr<ModelType> m_model;

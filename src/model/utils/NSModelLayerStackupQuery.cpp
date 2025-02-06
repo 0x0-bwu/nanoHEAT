@@ -20,13 +20,13 @@ LayerStackupModelQuery::LayerStackupModelQuery(CRef<Model> model)
     }
 }
 
-IdType LayerStackupModelQuery::SearchPolygon(IdType layer, const NCoord2D & pt) const
+Index LayerStackupModelQuery::SearchPolygon(Index layer, const NCoord2D & pt) const
 {
-    if (not m_model.hasPolygon(layer)) return INVALID_ID;
+    if (not m_model.hasPolygon(layer)) return INVALID_INDEX;
 
     Vec<RtVal> results;
     m_rtrees.at(layer)->query(boost::geometry::index::intersects(NBox2D(pt, pt)), std::back_inserter(results));
-    if (results.empty()) return INVALID_ID;
+    if (results.empty()) return INVALID_INDEX;
     const auto & polygons = m_model->polygons;
     auto cmp = [&](auto i1, auto i2){ return polygons.at(i1).Area() > polygons.at(i2).Area(); };
     std::priority_queue<size_t, Vec<size_t>, decltype(cmp)> pq(cmp);
@@ -35,7 +35,7 @@ IdType LayerStackupModelQuery::SearchPolygon(IdType layer, const NCoord2D & pt) 
             pq.emplace(result.second);
     }
     if (not pq.empty()) return pq.top();
-    return INVALID_ID;
+    return INVALID_INDEX;
 }
 
 } //namespace nano::heat::model::utils

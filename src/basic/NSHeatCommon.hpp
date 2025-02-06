@@ -161,12 +161,14 @@ struct PrismThermalSimulationSetup
 {
     BOOST_HANA_DEFINE_STRUCT(PrismThermalSimulationSetup,
         (Vec<FCoord3D>, monitors),
-        (TempUnit, envTemperature)
+        (TempUnit, envTemperature),
+        (Index, maxIteration)
     );
     PrismThermalSimulationSetup()
     {
         NS_INIT_HANA_STRUCT(*this);
         envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+        maxIteration = 10;
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
@@ -186,8 +188,8 @@ struct ThermalNetworkStaticSolverSettings
         (bool, dumpHotmap),
         (bool, dumpResult),
         (Float, residual),
-        (size_t, maxIter),
-        (Vec<IdType>, probs),
+        (Index, maxIter),
+        (Vec<Index>, probs),
         (TempUnit, envT)
     );
     ThermalNetworkStaticSolverSettings()

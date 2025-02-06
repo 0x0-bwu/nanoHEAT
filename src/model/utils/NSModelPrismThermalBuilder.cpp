@@ -44,7 +44,6 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
     if (not layout) return false;
 
     m_model.Reset();
-
     auto stackupModel = CreateLayerStackupModel(layout, settings.layerSettings);
     if (not stackupModel) return false;
 
@@ -58,7 +57,7 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation)) return false;
     NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
-    for (IdType layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
+    for (Index layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
         m_model.SetLayerPrismTemplate(layer, triangulation);
         PrismLayer prismLayer(layer);
         [[maybe_unused]] auto check = 
@@ -67,27 +66,27 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
         m_model.AppendLayer(std::move(prismLayer));
     }
 
-    HashSet<IdType> fluidMats;
+    HashSet<Index> fluidMats;
     auto matIter = layout->GetMaterialIter();
     while (auto mat = matIter.Next()) {
         if (MaterialType::FLUID == mat->GetMaterialType())
-            fluidMats.insert(IdType(mat));
+            fluidMats.insert(Index(mat));
     }
 
     LayerStackupModelQuery query(*stackupModel);
     const auto & powerBlocks = stackupModel->GetAllPowerBlocks();
-    HashMap<IdType, HashMap<IdType, IdType>> templateIdMap;
-    auto buildOnePrismLayer = [&](IdType index) {
+    HashMap<Index, HashMap<Index, Index>> templateIdMap;
+    auto buildOnePrismLayer = [&](Index index) {
         auto & prismLayer = m_model->layers.at(index);
-        auto & idMap = templateIdMap.emplace(prismLayer.id, HashMap<IdType, IdType>()).first->second;
+        auto & idMap = templateIdMap.emplace(prismLayer.id, HashMap<Index, Index>()).first->second;
         auto triangulation = m_model.GetLayerPrismTemplate(index);
         for (size_t it = 0; it < triangulation->triangles.size(); ++it) {
             NS_ASSERT(stackupModel->hasPolygon(prismLayer.id));
             auto ctPoint = tri::TriangulationUtility<NCoord2D>::GetCenter(*triangulation, it).Cast<NCoord>();
             auto pid = query.SearchPolygon(prismLayer.id, ctPoint);
-            if (pid == INVALID_ID) continue;;
+            if (pid == INVALID_INDEX) continue;;
             if (fluidMats.count(stackupModel->GetMaterialId(pid))) continue;
-            if (INVALID_ID == stackupModel->GetMaterialId(pid)) continue;
+            if (INVALID_INDEX == stackupModel->GetMaterialId(pid)) continue;
 
             auto & elem = prismLayer.AddElement(it);
             idMap.emplace(it, elem.id);
@@ -105,11 +104,11 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
         NS_TRACE("layer %1%'s total elements: %2%", index, prismLayer.elements.size());
     };
 
-    for (IdType index = 0; index < m_model.TotalLayers(); ++index)
+    for (Index index = 0; index < m_model.TotalLayers(); ++index)
         buildOnePrismLayer(index);
     
     //build connection
-    for (IdType index = 0; index < m_model.TotalLayers(); ++index) {
+    for (Index index = 0; index < m_model.TotalLayers(); ++index) {
         auto & layer = m_model->layers.at(index);
         auto & elements = layer.elements;
         const auto & currIdMap = templateIdMap.at(layer.id);
@@ -163,6 +162,7 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
         auto meshFile = std::string(nano::CurrentDir()) + "/mesh.vtk";
         m_model.WriteVTK<Float>(meshFile);
     }
+    m_model->layout = layout;
     return true;
 }
 

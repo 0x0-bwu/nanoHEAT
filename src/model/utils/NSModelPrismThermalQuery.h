@@ -13,19 +13,19 @@ public:
     explicit PrismThermalModelQuery(CRef<Model> model, bool lazyBuild = true);
     virtual ~PrismThermalModelQuery() = default;
     void SearchPrismInstances(const NBox2D & area, Vec<RtVal> & results) const;
-    void SearchPrismInstances(IdType layer, const NBox2D & area, Vec<RtVal> & results) const;
-    void SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const;
-    IdType NearestLayer(Float height) const;
+    void SearchPrismInstances(Index layer, const NBox2D & area, Vec<RtVal> & results) const;
+    void SearchNearestPrismInstances(Index layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const;
+    Index NearestLayer(Float height) const;
 
 protected:
     CPtr<Rtree> BuildIndexTree() const;
-    CPtr<Rtree> BuildLayerIndexTree(IdType layer) const;
+    CPtr<Rtree> BuildLayerIndexTree(Index layer) const;
 protected:
     CRef<Model> m_model;
 
     mutable std::mutex m_mutex;
     mutable UPtr<Rtree> m_rtree{nullptr};
-    mutable HashMap<IdType, SPtr<Rtree>> m_lyrRtrees;
+    mutable HashMap<Index, SPtr<Rtree>> m_lyrRtrees;
 };
 
 } // namespace nano::heat::model::utils

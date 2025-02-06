@@ -29,12 +29,12 @@ PrismThermalModel::PrismThermalModel()
     m_.blockBCs.emplace(Orientation::Bot, Vec<BlockBC>());
 }
 
-void PrismThermalModel::SetLayerPrismTemplate(IdType layer, SPtr<PrismTemplate> prismTemplate)
+void PrismThermalModel::SetLayerPrismTemplate(Index layer, SPtr<PrismTemplate> prismTemplate)
 {
     m_.prismTemplates.emplace(layer, prismTemplate);
 }
 
-SPtr<PrismThermalModel::PrismTemplate> PrismThermalModel::GetLayerPrismTemplate(IdType layer) const
+SPtr<PrismThermalModel::PrismTemplate> PrismThermalModel::GetLayerPrismTemplate(Index layer) const
 {
     auto iter = m_.prismTemplates.find(layer);
     return iter != m_.prismTemplates.cend() ? iter->second : nullptr;
@@ -63,7 +63,7 @@ PrismLayer & PrismThermalModel::AppendLayer(PrismLayer layer)
     return m_.layers.emplace_back(std::move(layer));
 }
 
-LineElement & PrismThermalModel::AddLineElement(FCoord3D start, FCoord3D end, IdType netId, IdType matId, Float radius, Float current, ScenarioId scenId)
+LineElement & PrismThermalModel::AddLineElement(FCoord3D start, FCoord3D end, Index netId, Index matId, Float radius, Float current, ScenarioId scenId)
 {
     NS_ASSERT_MSG(TotalPrismElements() > 0, "should add after build prism model")
     auto & elem = m_.lines.emplace_back(LineElement());
@@ -83,15 +83,15 @@ void PrismThermalModel::BuildPrismModel(Float scaleH2Unit, Float scale2Meter)
     m_.scaleH2Unit = scaleH2Unit;
     m_.scale2Meter = scale2Meter;
     m_.indexOffset = {0};
-    for (IdType i = 0; i < TotalLayers(); ++i)
+    for (Index i = 0; i < TotalLayers(); ++i)
         m_.indexOffset.emplace_back(m_.indexOffset.back() + m_.layers.at(i).TotalElements());
 
     const auto & triangles = m_.prismTemplates.at(0)->triangles;
-    HashMap<IdType, HashMap<IdType, IdType>> templateIdMap;
-    auto getPtIdxMap = [&templateIdMap](IdType layer) -> HashMap<size_t, size_t> & {
+    HashMap<Index, HashMap<Index, Index>> templateIdMap;
+    auto getPtIdxMap = [&templateIdMap](Index layer) -> HashMap<size_t, size_t> & {
         auto iter = templateIdMap.find(layer);
         if (iter == templateIdMap.cend())
-            iter = templateIdMap.emplace(layer, HashMap<IdType, IdType>()).first;
+            iter = templateIdMap.emplace(layer, HashMap<Index, Index>()).first;
         return iter->second;
     }; 
 
@@ -180,13 +180,13 @@ void PrismThermalModel::AddBondingWires(CPtr<LayerStackupModel> stackupModel)
     }
 }
 
-IdType PrismThermalModel::AddPoint(FCoord3D point)
+Index PrismThermalModel::AddPoint(FCoord3D point)
 {
     m_.points.emplace_back(point);
     return m_.points.size() - 1;
 }
 
-FCoord3D PrismThermalModel::GetPoint(IdType lyrId, IdType elemId, IdType vtxId) const
+FCoord3D PrismThermalModel::GetPoint(Index lyrId, Index elemId, Index vtxId) const
 {
     const auto & points = GetLayerPrismTemplate(lyrId)->points;
     const auto & triangles = GetLayerPrismTemplate(lyrId)->triangles;
@@ -200,7 +200,7 @@ FCoord3D PrismThermalModel::GetPoint(IdType lyrId, IdType elemId, IdType vtxId) 
     return FCoord3D(pt2d[0] * m_.scaleH2Unit, pt2d[1] * m_.scaleH2Unit, height);
 }
 
-bool PrismThermalModel::isPrism(IdType index) const
+bool PrismThermalModel::isPrism(Index index) const
 {
     return index < TotalPrismElements();
 }
@@ -215,7 +215,7 @@ Float PrismThermalModel::UnitScale2Meter(int order) const
     return std::pow(m_.scale2Meter, order);
 }
 
-void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<IdType> & indices) const
+void PrismThermalModel::SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<Index> & indices) const
 {
     indices.resize(monitors.size());
     utils::PrismThermalModelQuery query(*this);

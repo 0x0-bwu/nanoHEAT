@@ -16,7 +16,7 @@ public:
     ThermalNetworkStaticSolverSettings settings;
 
     template <typename ThermalNetworkBuilder>
-    bool Solve(const typename ThermalNetworkBuilder::ModelType * model, Vec<Scalar> & results) const;
+    bool Solve(CPtr<typename ThermalNetworkBuilder::ModelType> model, Vec<Scalar> & results) const;
 };
 
 class PrismThermalNetworkStaticSolver
