@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "nanoTest",
+            "name": "nanoHEAT",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/nanoTest.exe",
+            "program": "${workspaceFolder}/build.debug/bin/nanoTest.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}/build.debug",
             "environment": [],
             "externalConsole": false,
             "linux": { "MIMode": "gdb"},
@@ -25,13 +25,13 @@
             ]
         },
         {
-            "name": "dbTest",
+            "name": "nanoDB",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/3rdparty/nanoDB/build/bin/nanoTest.exe",
+            "program": "${workspaceFolder}/3rdparty/nanoDB/build.debug/bin/nanoTest.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/3rdparty/nanoDB/build",
+            "cwd": "${workspaceFolder}/3rdparty/nanoDB/build.debug",
             "environment": [],
             "externalConsole": false,
             "linux": { "MIMode": "gdb"},

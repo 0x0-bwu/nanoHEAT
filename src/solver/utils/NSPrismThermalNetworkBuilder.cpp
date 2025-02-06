@@ -353,7 +353,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineArea(Index index) const
 template <typename Scalar>
 Arr3<Float> PrismThermalNetworkBuilder<Scalar>::GetMatThermalConductivity(Index matId, Float refT) const
 {
-    Arr3<Float> result{0, 0 , 0};
+    Arr3<Float> result{0, 0, 0};
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
     auto prop = mat->GetProperty(Material::Prop::THERMAL_CONDUCTIVITY); { NS_ASSERT(prop); }
     for (size_t i = 0; i < result.size(); ++i) {

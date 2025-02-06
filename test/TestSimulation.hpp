@@ -28,6 +28,18 @@ void t_prism_thermal_simulation()
         package::utils::LayoutRetriever retriever(layout);
         std::vector<std::string> cellInsts{"TopBridge1", "TopBridge2", "BotBridge1", "BotBridge2"};
         std::vector<std::string> components{"Die1", "Die2", "Die3"};
+        for (const auto & cellInst : cellInsts) {
+            for (const auto & comp : components) {
+                auto name = cellInst + HierObj::GetHierSep().data() + comp;
+                auto cp = layout->FindComponent(name);
+                NS_ASSERT(cp);
+                retriever.GetComponentHeightThickness(cp, elevation, thickness);
+                auto bonds = cp->GetBoundary(); { NS_ASSERT(bonds); }
+                auto ct = generic::geometry::Extent(bonds->GetOutline()).Center();
+                auto loc = layout->GetCoordUnit().toUnit(ct);
+                monitors.emplace_back(loc[0], loc[1], elevation - 0.1 * thickness);
+            }
+        }
         return monitors;
     };
 
@@ -36,7 +48,8 @@ void t_prism_thermal_simulation()
     heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    // auto minmax = simulation.RunStatic(temperature);
+    // auto range = simulation.RunStatic(temperature);
+    // std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
 
