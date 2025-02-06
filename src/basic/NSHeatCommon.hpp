@@ -56,7 +56,7 @@ struct LayerStackupModelExtractionSettings
         dumpPNG = true;
         addCircleCenterAsSteinerPoint = false;
         layerCutPrecision = 6;
-        layerTransitionRatio = 2;
+        layerTransitionRatio = 0;
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
