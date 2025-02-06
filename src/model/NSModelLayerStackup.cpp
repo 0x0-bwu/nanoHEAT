@@ -28,13 +28,13 @@ LayerStackupModel::LayerStackupModel()
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
 bool LayerStackupModel::Save(std::string_view filename, ArchiveFormat fmt) const
 {
-    return generic::archive::Save(*this, CURRENT_VERSION.toInt(), filename, fmt);
+    return nano::Save(*this, CURRENT_VERSION.toInt(), filename, fmt);
 }
 
 bool LayerStackupModel::Load(std::string_view filename, ArchiveFormat fmt)
 {
     unsigned int version{0};
-    return generic::archive::Load(*this, version, filename, fmt);
+    return nano::Load(*this, version, filename, fmt);
 }
 
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
@@ -53,7 +53,7 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
     m_.height2indices.clear();
     std::set<Height> heights;
     for (size_t i = 0; i < m_.layerRanges.size(); ++i) {
-        if (INVALID_ID == m_.materials.at(i)) continue;
+        if (INVALID_INDEX == m_.materials.at(i)) continue;
         const auto & range = m_.layerRanges.at(i);
         if (not range.isValid()) continue;
         heights.emplace(range.high);
@@ -73,9 +73,9 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
     for (size_t i = 0; i < m_.polygons.size(); ++i) {
         const auto & range = m_.layerRanges.at(i);
         if (not range.isValid()) continue;
-        IdType sLayer = m_.height2indices.at(range.high);
-        IdType eLayer = std::min(TotalLayers(), m_.height2indices.at(range.low));
-        for (IdType layer = sLayer; layer < eLayer; ++layer) {
+        Index sLayer = m_.height2indices.at(range.high);
+        Index eLayer = std::min(TotalLayers(), m_.height2indices.at(range.low));
+        for (Index layer = sLayer; layer < eLayer; ++layer) {
             auto iter = m_.layerPolygons.find(layer);
             if (iter == m_.layerPolygons.cend())
                 iter = m_.layerPolygons.emplace(layer, new PolygonIds).first;
@@ -116,12 +116,12 @@ size_t LayerStackupModel::TotalLayers() const
     return m_.layerOrder.size() - 1;
 }
 
-bool LayerStackupModel::hasPolygon(IdType layer) const
+bool LayerStackupModel::hasPolygon(Index layer) const
 {
     return m_.layerPolygons.count(layer);
 }
 
-bool LayerStackupModel::GetLayerHeightThickness(IdType layer, Float & elevation, Float & thickness) const
+bool LayerStackupModel::GetLayerHeightThickness(Index layer, Float & elevation, Float & thickness) const
 {
     if (layer >= TotalLayers()) return false;
     elevation = Float(m_.layerOrder.at(layer)) / m_.vScale2Int;
@@ -129,10 +129,10 @@ bool LayerStackupModel::GetLayerHeightThickness(IdType layer, Float & elevation,
     return true;
 }
 
-IdType LayerStackupModel::GetLayerIndexByHeight(Height height) const
+Index LayerStackupModel::GetLayerIndexByHeight(Height height) const
 {
     auto iter = m_.height2indices.find(height);
-    if (iter == m_.height2indices.cend()) return INVALID_ID;
+    if (iter == m_.height2indices.cend()) return INVALID_INDEX;
     return iter->second;
 }
 
@@ -141,7 +141,7 @@ const NPolygon & LayerStackupModel::GetLayoutBoundary() const
     return m_.polygons.front();
 }
 
-SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(IdType layer) const
+SPtr<LayerStackupModel::PolygonIds> LayerStackupModel::GetLayerPolygonIds(Index layer) const
 {
     auto iter = m_.layerPolygons.find(layer);
     NS_ASSERT(iter != m_.layerPolygons.cend());
@@ -153,7 +153,7 @@ LayerStackupModel::LayerRange LayerStackupModel::GetLayerRange(Float elevation, 
     return LayerRange{GetHeight(elevation), GetHeight(elevation - thickness)};
 }
 
-Vec<NPolygon> LayerStackupModel::GetLayerPolygons(IdType layer) const
+Vec<NPolygon> LayerStackupModel::GetLayerPolygons(Index layer) const
 {
     auto indices = GetLayerPolygonIds(layer);
     Vec<NPolygon> polygons; polygons.reserve(indices->size());

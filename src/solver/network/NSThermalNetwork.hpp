@@ -14,12 +14,12 @@ public:
     inline constexpr static Scalar UNKNOWN_T = INVALID_FLOAT;
     struct Node
     {
-        IdType scen = INVALID_ID;
+        Index scen = INVALID_INDEX;
         Scalar t = UNKNOWN_T;//unit: K
         Scalar c = 0;//unit: J/K
         Scalar hf = 0;//unit: W
         Scalar htc = 0;//unit: W/m^2-K
-        HashMap<IdType, Scalar> ns;//unit: K/W
+        HashMap<Index, Scalar> ns;//unit: K/W
     };
     
     explicit ThermalNetwork(size_t nodes)
@@ -27,7 +27,7 @@ public:
         m_nodes.assign(nodes, Node());
     }
 
-    bool isSource(IdType nid) const
+    bool isSource(Index nid) const
     {
         auto & node = m_nodes[nid];
         if (0 != node.hf) return true;
@@ -42,23 +42,23 @@ public:
     Node  & operator [] (size_t i) { return m_nodes[i]; }
     const Node & operator [] (size_t i) const { return m_nodes[i]; }
 
-    void SetT(IdType node, Scalar t) { m_nodes[node].t = t; }
-    Scalar GetT(IdType ndoe) const { return m_nodes[ndoe].t; }
+    void SetT(Index node, Scalar t) { m_nodes[node].t = t; }
+    Scalar GetT(Index ndoe) const { return m_nodes[ndoe].t; }
 
-    void SetHF(IdType node, Scalar hf) { m_nodes[node].hf  = hf; }
-    void AddHF(IdType node, Scalar hf) { m_nodes[node].hf += hf; }
-    Scalar GetHF(IdType node) const { return m_nodes[node].hf; }
+    void SetHF(Index node, Scalar hf) { m_nodes[node].hf  = hf; }
+    void AddHF(Index node, Scalar hf) { m_nodes[node].hf += hf; }
+    Scalar GetHF(Index node) const { return m_nodes[node].hf; }
 
-    void SetHTC(IdType node, Scalar htc) { m_nodes[node].htc = htc; }
-    Scalar GetHTC(IdType node) const { return m_nodes[node].htc; }
+    void SetHTC(Index node, Scalar htc) { m_nodes[node].htc = htc; }
+    Scalar GetHTC(Index node) const { return m_nodes[node].htc; }
 
-    void SetC(IdType node, Scalar c) { m_nodes[node].c = c; } 
-    Scalar GetC(IdType node) const { return m_nodes[node].c; }
+    void SetC(Index node, Scalar c) { m_nodes[node].c = c; } 
+    Scalar GetC(Index node) const { return m_nodes[node].c; }
 
-    void SetScenario(IdType node, IdType scen) { m_nodes[node].scen = scen; }
-    IdType GetScenario(IdType node) const { return m_nodes[node].scen; }
+    void SetScenario(Index node, Index scen) { m_nodes[node].scen = scen; }
+    Index GetScenario(Index node) const { return m_nodes[node].scen; }
 
-    void SetR(IdType n1, IdType n2, Scalar r)
+    void SetR(Index n1, Index n2, Scalar r)
     {
         r = std::max(r, MIN_R);
         if (n1 > n2) std::swap(n1, n2);
@@ -74,7 +74,7 @@ public:
         m_mnMap.clear();
         m_nmMap.reserve(m_nodes.size());
         m_mnMap.reserve(m_nodes.size());
-        IdType nId{0}, mId{0};
+        Index nId{0}, mId{0};
         for (auto & node : m_nodes) {
             if (node.t != UNKNOWN_T) {
                 nId++; continue;
@@ -85,8 +85,8 @@ public:
         }
     }
 
-    IdType NodeId(IdType mId) const { return m_mnMap.at(mId); }
-    IdType MatrixId(IdType nId) const { return m_nmMap.at(nId); }
+    Index NodeId(Index mId) const { return m_mnMap.at(mId); }
+    Index MatrixId(Index nId) const { return m_nmMap.at(nId); }
 
     size_t NodeSize() const { return m_nodes.size(); }
     size_t MatrixSize() const { return m_nmMap.size(); }
@@ -101,8 +101,8 @@ public:
 
 private:
     Vec<Node> m_nodes;
-    HashMap<IdType, IdType> m_nmMap;
-    HashMap<IdType, IdType> m_mnMap;
+    HashMap<Index, Index> m_nmMap;
+    HashMap<Index, Index> m_mnMap;
 };
 
 using namespace generic::ckt;
@@ -130,7 +130,7 @@ inline DenseVector<Scalar> makeRhs(const ThermalNetwork<Scalar> & network, Scala
 }
 
 template <typename Scalar>
-inline MNA<SparseMatrix<Scalar>> makeMNA(const ThermalNetwork<Scalar> & network, const Vec<IdType> & probs = {})
+inline MNA<SparseMatrix<Scalar>> makeMNA(const ThermalNetwork<Scalar> & network, const Vec<Index> & probs = {})
 {
     using Matrix = SparseMatrix<Scalar>;
     using Triplets = Vec<Eigen::Triplet<Scalar>>;

@@ -13,9 +13,9 @@ public:
     bool Build(CId<Layout> layout, Settings settings);
 
 private:
-    IdType AddPolygon(IdType netId, IdType matId, NPolygon polygon, bool isHole, Float elevation, Float thickness);
-    void AddShape(IdType netId, IdType solidMat, IdType holeMat, CRef<Shape> shape, Float elevation, Float thickness);
-    bool AddPowerBlock(IdType matId, NPolygon polygon, ScenarioId scen, IdType powerLut, Float elevation, Float thickness, Float pwrPosition = 0.1, Float pwrThickness = 0.1);
+    Index AddPolygon(Index netId, Index matId, NPolygon polygon, bool isHole, Float elevation, Float thickness);
+    void AddShape(Index netId, Index solidMat, Index holeMat, CRef<Shape> shape, Float elevation, Float thickness);
+    bool AddPowerBlock(Index matId, NPolygon polygon, ScenarioId scen, Index powerLut, Float elevation, Float thickness, Float pwrPosition = 0.1, Float pwrThickness = 0.1);
     void AddComponent(CId<Component> component);
     void AddBondingWire(Model::BondingWire bw);
     void AddImprintBox(const NBox2D & box);

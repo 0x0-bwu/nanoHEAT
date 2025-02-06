@@ -87,6 +87,10 @@ void t_build_prism_thermal_model()
 
     auto vtkFile = std::string(nano::CurrentDir()) + "/prism.vtk";
     model->WriteVTK<Float>(vtkFile);
+
+    auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
+    nano::Save(*model, CURRENT_VERSION.toInt(), prismThermalModelFile, ArchiveFormat::BIN);
+
     Database::Shutdown();
 }
 

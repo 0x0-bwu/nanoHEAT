@@ -21,21 +21,21 @@ void PrismThermalModelQuery::SearchPrismInstances(const NBox2D & area, Vec<RtVal
     rtree->query(boost::geometry::index::covered_by(area), std::back_inserter(results));
 }
 
-void PrismThermalModelQuery::SearchPrismInstances(IdType layer, const NBox2D & area, Vec<RtVal> & results) const
+void PrismThermalModelQuery::SearchPrismInstances(Index layer, const NBox2D & area, Vec<RtVal> & results) const
 {
     results.clear();
     auto rtree = BuildLayerIndexTree(layer);
     rtree->query(boost::geometry::index::covered_by(area), std::back_inserter(results));
 }
 
-void PrismThermalModelQuery::SearchNearestPrismInstances(IdType layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const
+void PrismThermalModelQuery::SearchNearestPrismInstances(Index layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const
 {
     results.clear();
     auto rtree = BuildLayerIndexTree(layer);
     rtree->query(boost::geometry::index::nearest(pt, k), std::back_inserter(results));
 }
 
-IdType PrismThermalModelQuery::NearestLayer(Float height) const
+Index PrismThermalModelQuery::NearestLayer(Float height) const
 {
     using namespace generic::math;
     const auto & layers = m_model->layers;
@@ -65,7 +65,7 @@ CPtr<PrismThermalModelQuery::Rtree> PrismThermalModelQuery::BuildIndexTree() con
     return m_rtree.get();
 }
 
-CPtr<PrismThermalModelQuery::Rtree> PrismThermalModelQuery::BuildLayerIndexTree(IdType layer) const
+CPtr<PrismThermalModelQuery::Rtree> PrismThermalModelQuery::BuildLayerIndexTree(Index layer) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (auto iter = m_lyrRtrees.find(layer); iter != m_lyrRtrees.cend()) return iter->second.get();

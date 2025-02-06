@@ -13,10 +13,10 @@ public:
     explicit LayerStackupModelQuery(CRef<Model> model);
     virtual ~LayerStackupModelQuery() = default;
 
-    IdType SearchPolygon(IdType layer, const NCoord2D & pt) const;
+    Index SearchPolygon(Index layer, const NCoord2D & pt) const;
     
 protected:
     CRef<Model> m_model;
-    mutable std::unordered_map<IdType, std::shared_ptr<Rtree> > m_rtrees;
+    mutable std::unordered_map<Index, std::shared_ptr<Rtree> > m_rtrees;
 };
 } // namespace nano::heat::model::utils
