@@ -2,6 +2,7 @@
 #include "NSModelLayerStackup.h"
 #include <nano/core/power>
 
+#include "generic/geometry/PolygonMerge.hpp"
 #include "generic/geometry/GeometryIO.hpp"
 #include "generic/geometry/Utility.hpp"
 
