@@ -138,10 +138,9 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     auto scaleH2Unit = coordUnit.Scale2Unit();
     auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::Meter);
     m_model.BuildPrismModel(scaleH2Unit, scale2Meter);
-    NS_TRACE("total prism elements: %1%", m_model.TotalPrismElements());
-
     m_model.AddBondingWires(stackupModel);
-    NS_TRACE("total line elements: %1%", m_model.TotalLineElements());
+    NS_TRACE("total elements: %1%, prism: %2%, line: %3%", 
+    m_model.TotalElements(), m_model.TotalPrismElements(), m_model.TotalLineElements());
 
     // bc
     if (bcSettings.uniformBCs[0].isValid())

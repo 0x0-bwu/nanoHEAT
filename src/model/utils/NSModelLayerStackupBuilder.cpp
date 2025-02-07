@@ -2,7 +2,9 @@
 #include "NSModelLayerStackup.h"
 #include <nano/core/power>
 
+#include "generic/geometry/GeometryIO.hpp"
 #include "generic/geometry/Utility.hpp"
+
 namespace nano::heat::model::utils {
 
 LayerStackupModelBuilder::LayerStackupModelBuilder(Ref<Model> model) : m_model(model) {}
@@ -98,9 +100,13 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     m_model.BuildLayerPolygonLUT(m_model->settings.layerTransitionRatio);
 
     if (m_model->settings.dumpPNG) {
-        auto name = m_layout->GetPackage()->GetName();
-        auto filename = std::string(nano::CurrentDir()) + '/' + name.data() + ".png";
+        auto filename = std::string(nano::CurrentDir()) + "/stackup.png";
         m_model.WritePNG(filename, 4096);
+        for (size_t i = 0; i < m_model.TotalLayers(); ++i) {
+            auto filename = std::string(nano::CurrentDir()) + "/stackup_layer" + std::to_string(i) + ".png";
+            auto polygons = m_model.GetLayerPolygons(i);
+            generic::geometry::GeometryIO::WritePNG(filename, polygons.begin(), polygons.end(), 4096);
+        }
     }
 
     return true;
