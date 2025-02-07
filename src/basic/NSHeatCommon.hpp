@@ -11,7 +11,7 @@ enum class Orientation { Top, Bot };
 
 struct ThermalBoundaryCondition
 {
-    enum class Type { HTC, HEAT_FLUX, TEMPERATURE };
+    enum class Type { HTC/*W/(m^2*K)*/, HEAT_FLUX/*W/m^2*/, TEMPERATURE/*Celsius*/ };
     BOOST_HANA_DEFINE_STRUCT(ThermalBoundaryCondition,
         (Type, type),
         (Float, value)
@@ -115,6 +115,16 @@ struct BoundaryCondtionSettings
     {
         NS_INIT_HANA_STRUCT(*this);
         envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+    }
+
+    void SetTopUniformBC(BC::Type type, Float value)
+    {
+        uniformBCs[0] = BC{type, value};
+    }
+
+    void SetBotUniformBC(BC::Type type, Float value)
+    {
+        uniformBCs[1] = BC{type, value};
     }
 
     void AddBlockBC(Orientation ori, FBox2D box, BC::Type type, Float value)

@@ -28,13 +28,13 @@ public:
         for (size_t i = 0; i < network.NodeSize(); ++i) {
             auto & node = network[i];
             if (ThermalNetwork<Scalar>::UNKNOWN_T == node.t) {
-                continue;
                 // x[network.MatrixId(i)] = result[i];
+                continue;
             }
             else result[i] = node.t;
         }
         Eigen::ConjugateGradient<SparseMatrix<Scalar>, Eigen::Lower|Eigen::Upper> solver(m.G);
-        // x = m.L * solver.solveWithGauss(rhs, x);
+        // x = m.L * solver.solveWithGuess(m.B * rhs, x);
         x = m.L * solver.solve(m.B * rhs);
         NS_TRACE("Eigen CG iterations: %1%", solver.iterations());
         NS_TRACE("Eigen CG error: %1%", solver.error());

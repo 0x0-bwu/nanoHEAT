@@ -66,8 +66,10 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
     }
     m_.layerOrder = Vec<Height>(heights.begin(), heights.end());
     std::reverse(m_.layerOrder.begin(), m_.layerOrder.end());
-    for (size_t i = 0; i < m_.layerOrder.size(); ++i)
+    for (size_t i = 0; i < m_.layerOrder.size(); ++i) {
+        NS_TRACE("stackup layer %1% height: %2%", i, m_.layerOrder.at(i));
         m_.height2indices.emplace(m_.layerOrder.at(i), i);
+    }
 
     m_.layerPolygons.clear();
     for (size_t i = 0; i < m_.polygons.size(); ++i) {
