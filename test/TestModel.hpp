@@ -1,5 +1,5 @@
 #pragma once
-#include "TestCommon.hpp"
+#include "TestPackage.hpp"
 #include <nano/db>
 
 #include "generic/tools/FileSystem.hpp"
@@ -98,12 +98,75 @@ void t_build_prism_thermal_model()
     Database::Shutdown();
 }
 
+void t_build_prism_thermal_model2()
+{
+    using namespace nano::heat;
+    using namespace nano::package;
+
+    Database::Create("kicad_test1");
+
+    auto filename = generic::fs::DirName(__FILE__).string() + "/data/package/test.kicad_pcb";
+    auto package = extension::CreateFromKiCad(filename.c_str());
+    auto layout = package->GetTop()->GetCell()->GetLayout().ConstCast();
+    NS_ASSERT(layout);
+
+    detail::SetupMaterials(package);
+    auto matCu = package->FindMaterial("Cu"); BOOST_CHECK(matCu);
+    auto matAir = package->FindMaterial("Air"); BOOST_CHECK(matAir);
+    auto matFR4 = package->FindMaterial("FR4"); BOOST_CHECK(matFR4);
+    auto matSiC = package->FindMaterial("SiC"); BOOST_CHECK(matSiC);
+    auto matSolder = package->FindMaterial("Solder"); BOOST_CHECK(matSolder);
+
+    auto layerIter = package->GetStackupLayerIter();
+    while (auto stackupLayer = layerIter.Next()) {
+        stackupLayer->SetConductingMaterial(matCu);
+        stackupLayer->SetDielectricMaterial(matFR4);
+    }
+
+    auto fpCellIter = package->GetFootprintCellIter();
+    while (auto fpCell = fpCellIter.Next()) {
+        fpCell->SetMaterial(matSiC);
+        if (0 == fpCell->GetHeight())
+            fpCell->SetHeight(2);
+    }
+
+    auto compIter = layout->GetComponentIter();
+    while (auto comp = compIter.Next()) {
+        auto mountingLayer = comp->GetAssemblyLayer();
+        NS_ASSERT(mountingLayer);
+        auto footprint = mountingLayer->GetFootprint().ConstCast();
+        footprint->SetSolderMaterial(matSolder);
+        footprint->SetSolderFillingMaterial(matSolder);//wbtest todo;
+        footprint->SetSolderBallBumpThickness(0.1);
+    }
+
+    PrismThermalModelExtractionSettings settings;
+    settings.layerSettings.addCircleCenterAsSteinerPoint = true;
+
+    auto & meshSettings = settings.meshSettings;
+    meshSettings.minAlpha = 15;
+    meshSettings.minLen = 0.01;
+    meshSettings.maxLen = 3.00;
+    meshSettings.tolerance = 1e-2;
+    meshSettings.maxIter = 1e4;
+    meshSettings.dumpMeshFile = true;
+
+    auto & bcSettings = settings.bcSettings;
+    bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
+    bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
+
+    auto model = model::CreatePrismThermalModel(layout, settings);
+    BOOST_CHECK(model);
+}
+
 test_suite * create_nano_heat_model_test_suite()
 {
     test_suite * model_suite = BOOST_TEST_SUITE("s_heat_model_test");
     //
     model_suite->add(BOOST_TEST_CASE(&t_build_layer_stackup_model));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model));
+
+    // model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model2));
     //
     return model_suite;
 }

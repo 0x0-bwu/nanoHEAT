@@ -141,23 +141,26 @@ void LayerStackupModelBuilder::AddComponent(CId<Component> component)
     if (component->isBlackBox()) {
         Float elevation{0}, thickness{0};
         auto material = component->GetMaterial();
-        auto boundary = component->GetBoundary()->GetOutline();
+        auto boundary = component->GetBoundary(); NS_ASSERT(boundary);
+        auto outline = boundary->GetOutline();
         check = m_retriever->GetComponentHeightThickness(component, elevation, thickness);
         NS_ASSERT_MSG(check, "failed to get component height thickness");
 
         if (auto lossPower = component->GetBind<LossPower>(); lossPower) {
             auto scen = lossPower->GetScenario();
             auto lut = lossPower->GetLookupTable();
-            check = AddPowerBlock(Index(material), boundary, scen, lut, elevation, thickness);
+            check = AddPowerBlock(Index(material), outline, scen, lut, elevation, thickness);
             NS_ASSERT_MSG(check, "failed to add power block")
         }
-        else AddPolygon(INVALID_INDEX, Index(material), boundary, false, elevation, thickness);
+        else AddPolygon(INVALID_INDEX, Index(material), outline, false, elevation, thickness);
         
-        check = m_retriever->GetComponentLayerHeightThickness(component->GetAssemblyLayer(), elevation, thickness);
+        auto assemblyLayer = component->GetAssemblyLayer(); NS_ASSERT(assemblyLayer);
+        check = m_retriever->GetComponentLayerHeightThickness(assemblyLayer, elevation, thickness);
         NS_ASSERT_MSG(check, "failed to get component layer height thickness");
         if (thickness > 0) {
-            auto solderMat = component->GetAssemblyLayer()->GetSolderFillingMaterial();
-            AddPolygon(INVALID_INDEX, Index(solderMat), boundary, false, elevation, thickness);
+            auto material = assemblyLayer->GetSolderFillingMaterial();
+            auto boundary = assemblyLayer->GetBoundary(); NS_ASSERT(boundary);
+            AddPolygon(INVALID_INDEX, Index(material), boundary->GetOutline(), false, elevation, thickness);
             //todo, solder ball/bump
         }
     }
