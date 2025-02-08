@@ -18,8 +18,8 @@ UPtr<typename PrismThermalNetworkBuilder<Scalar>::Network> PrismThermalNetworkBu
     summary.totalNodes = size;
     auto network = std::make_unique<Network>(size);
 
-    if (auto threads = nano::Threads(); threads > 1) {
-        auto & pool = nano::Pool();
+    if (auto threads = nano::thread::Threads(); threads > 1) {
+        auto & pool = nano::thread::Pool();
         size_t size = m_model->TotalPrismElements();
         size_t blocks = threads * 2;
         size_t blockSize = size / blocks;
@@ -52,7 +52,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
         const auto & inst = m_model->GetPrism(i);
         const auto & element = m_model->GetPrismElement(inst.layer, inst.element);
         if (auto lut = CId<LookupTable>(element.powerLutId); lut) {
-            auto p = lut->Lookup(iniT.at(i));
+            auto p = lut->Lookup(iniT.at(i), /*extrapolation*/false);
             p *= element.powerRatio;
             summary.iHeatFlow += p;
             network->AddHF(i, p);
@@ -108,7 +108,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
                     else summary.oHeatFlow += heatFlow;
                 }
                 else if (ThermalBoundaryCondition::Type::TEMPERATURE == topBC->type) {
-                    network->SetT(i, TempUnit::Celsius2Kelvins(topBC->value));
+                    network->SetT(i, topBC->value);
                     summary.fixedTNodes += 1;
                 }
             }
@@ -137,7 +137,7 @@ void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & i
                     else summary.oHeatFlow += heatFlow;
                 }
                 else if (ThermalBoundaryCondition::Type::TEMPERATURE == botBC->type) {
-                    network->SetT(i, TempUnit::Celsius2Kelvins(botBC->value));
+                    network->SetT(i, botBC->value);
                     summary.fixedTNodes += 1;
                 }
             }
@@ -233,7 +233,7 @@ void PrismThermalNetworkBuilder<Scalar>::ApplyBlockBCs(Ptr<Network> network) con
                     summary.boundaryNodes += 1;
                 }
                 else if (ThermalBoundaryCondition::Type::TEMPERATURE == block.second.type) { 
-                    network->SetT(result.second, TempUnit::Celsius2Kelvins(value));
+                    network->SetT(result.second, value);
                     summary.fixedTNodes += 1;
                 }
             }    

@@ -1,8 +1,8 @@
 #include "NSModelLayerStackupBuilder.h"
+#include "NSModelLayoutPolygonMerger.h"
 #include "NSModelLayerStackup.h"
 #include <nano/core/power>
 
-#include "generic/geometry/PolygonMerge.hpp"
 #include "generic/geometry/GeometryIO.hpp"
 #include "generic/geometry/Utility.hpp"
 
@@ -21,6 +21,11 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     m_layout = layout;
     m_retriever = std::make_unique<LayoutRetriever>(m_layout);
 
+    NS_TRACE("start merging layout polygons");
+    using PolygonData = typename LayoutPolygonMerger::PolygonData;
+    LayoutPolygonMerger merger(m_layout);
+    merger.Merge();
+
     [[maybe_unused]] bool check{false};
     Float elevation{0}, thickness{0};
     auto layerIter = m_layout->GetStackupLayerIter();
@@ -29,6 +34,15 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
         check = m_retriever->GetStackupLayerHeightThickness(layer, elevation, thickness);
         NS_ASSERT_MSG(check, "failed to get stackup height thickness");
         AddShape(INVALID_INDEX, Index(dieMat), INVALID_INDEX, *m_layout->GetBoundary(), elevation, thickness);
+
+        Vec<CPtr<PolygonData>> polygons;
+        check = merger.GetMergedPolygons(Index(layer), polygons);
+        for (auto * polygon : polygons) {
+            auto & [net, mat] = polygon->property;
+            AddPolygon(net, mat, std::move(polygon->solid), false, elevation, thickness);
+            for (auto & hole : polygon->holes)
+                AddPolygon(net, mat, std::move(hole), true, elevation, thickness);
+        }
     }
 
     auto compIter = m_layout->GetComponentIter();
@@ -36,59 +50,28 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
         AddComponent(comp);
     }
 
-    auto connObjIter = m_layout->GetConnObjIter();
-    while (auto connObj = connObjIter.Next()) {
-        auto netId = Index(connObj->GetNet());
-        if (auto bondingWire = connObj->GetBondingWire(); bondingWire) {
-            LayerStackupModel::BondingWire bw;
-            check = m_retriever->GetBondingWireSegmentsWithMinSeg(bondingWire, bw.pt2ds, bw.heights, 10);
-            NS_ASSERT_MSG(check, "failed to get bonding wire segments");
-            bw.radius = bondingWire->GetRadius();
-            bw.matId = Index(bondingWire->GetMaterial());
-            bw.netId = netId;
-            //todo joul heating
-            AddBondingWire(std::move(bw));
+    auto bondingWireIter = m_layout->GetBondingWireIter();
+    while (auto bondingWire = bondingWireIter.Next()) {
+        auto netId = Index(bondingWire->GetNet());
+        LayerStackupModel::BondingWire bw;
+        check = m_retriever->GetBondingWireSegmentsWithMinSeg(bondingWire, bw.pt2ds, bw.heights, 10);
+        NS_ASSERT_MSG(check, "failed to get bonding wire segments");
+        bw.radius = bondingWire->GetRadius();
+        bw.matId = Index(bondingWire->GetMaterial());
+        bw.netId = netId;
+        //todo joul heating
+        AddBondingWire(std::move(bw));
 
-            if (auto sj = bondingWire->GetSolderJoints(); sj) {
-                CId<Material> mat;
-                if (sj->hasTopSolderBump()) {
-                    CId<Material> mat = sj->GetTopSolderBumpMaterial();
-                    auto shape = m_retriever->GetBondingWireStartSolderJointParameters(bondingWire, mat, elevation, thickness);
-                    AddShape(netId, Index(mat), INVALID_INDEX, *shape, elevation, thickness);
-                }
-                if (sj->hasBotSolderBall()) {
-                    auto shape = m_retriever->GetBondingWireEndSolderJointParameters(bondingWire, mat, elevation, thickness);
-                    AddShape(netId, Index(mat), INVALID_INDEX, *shape, elevation, thickness);
-                }
+        if (auto sj = bondingWire->GetSolderJoints(); sj) {
+            CId<Material> mat;
+            if (sj->hasTopSolderBump()) {
+                CId<Material> mat = sj->GetTopSolderBumpMaterial();
+                auto shape = m_retriever->GetBondingWireStartSolderJointParameters(bondingWire, mat, elevation, thickness);
+                AddShape(netId, Index(mat), INVALID_INDEX, *shape, elevation, thickness);
             }
-        }
-        else if (auto routingWire = connObj->GetRoutingWire(); routingWire) {
-            auto layer = routingWire->GetStackupLayer();
-            auto shape = routingWire->GetShape();
-            if (not m_retriever->GetStackupLayerHeightThickness(layer, elevation, thickness)) {
-                NS_ASSERT_MSG(false, "failed to get routing wire stackup layer height thickness");
-                continue;
-            }
-            auto condMat = layer->GetConductingMaterial();
-            auto dielMat = layer->GetDielectricMaterial();
-            AddShape(netId, Index(condMat), Index(dielMat), *shape, elevation, thickness);
-        }
-
-        else if (auto padstackInst = connObj->GetPadstackInst(); padstackInst) {
-            auto padstack = padstackInst->GetPadstack();
-            auto viaShape = padstackInst->GetViaShape();
-            auto matId = Index(padstack->GetMaterial());
-            auto iter = m_layout->GetStackupLayerIter();
-            while (auto layer = iter.Next()) {
-                if (padstackInst->isLayerInRange(layer)) {
-                    if (auto shape = padstackInst->GetPadShape(layer)) {
-                        elevation = layer->GetElevation();
-                        thickness = layer->GetThickness();
-                        AddShape(netId, matId, INVALID_INDEX, *shape, elevation, thickness);
-                    }
-                    else if (viaShape)
-                        AddShape(netId, matId, INVALID_INDEX, *viaShape, elevation, thickness);
-                }
+            if (sj->hasBotSolderBall()) {
+                auto shape = m_retriever->GetBondingWireEndSolderJointParameters(bondingWire, mat, elevation, thickness);
+                AddShape(netId, Index(mat), INVALID_INDEX, *shape, elevation, thickness);
             }
         }
     }

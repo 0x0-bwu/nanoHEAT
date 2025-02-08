@@ -8,10 +8,9 @@ namespace nano::heat {
 
 enum class Orientation { Top, Bot };
 
-
 struct ThermalBoundaryCondition
 {
-    enum class Type { HTC/*W/(m^2*K)*/, HEAT_FLUX/*W/m^2*/, TEMPERATURE/*Celsius*/ };
+    enum class Type { HTC/*W/(m^2*K)*/, HEAT_FLUX/*W/m^2*/, TEMPERATURE/*Kelvin*/ };
     BOOST_HANA_DEFINE_STRUCT(ThermalBoundaryCondition,
         (Type, type),
         (Float, value)
