@@ -82,7 +82,7 @@ void t_build_prism_thermal_model()
     bcSettings.AddBlockBC(Orientation::Top, FBox2D({  2.75, -17.00}, {  9.75, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
     bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75,  11.50}, {- 2.55,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
     bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75, -17.00}, {- 2.55, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
-    // bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::TEMPERATURE, 25);
+    // bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::TEMPERATURE, TempUnit::Celsisu2Kelvin(25));
     auto model = model::CreatePrismThermalModel(layout, &stackupModel, meshSettings, bcSettings);
     BOOST_CHECK(model);
 

@@ -43,6 +43,7 @@ void t_prism_thermal_simulation()
         return monitors;
     };
 
+    // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
     heat::simulation::PrismThermalSimulation simulation(&model, setup);

@@ -6,7 +6,7 @@ PrismThermalModelQuery::PrismThermalModelQuery(CRef<Model> model, bool lazyBuild
  : m_model(model)
 {
     if (not lazyBuild) {
-        auto & pool = nano::Pool();
+        auto & pool = nano::thread::Pool();
         for (size_t i = 0; i < m_model.TotalLayers(); ++i)
             pool.Submit(std::bind(&PrismThermalModelQuery::BuildLayerIndexTree, this, i));
         pool.Submit(std::bind(&PrismThermalModelQuery::BuildIndexTree, this));
