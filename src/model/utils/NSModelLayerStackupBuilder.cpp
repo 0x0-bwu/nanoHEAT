@@ -26,6 +26,9 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     LayoutPolygonMerger merger(m_layout);
     merger.Merge();
 
+    if (m_model->settings.dumpPNG)
+        merger.WritePNG(nano::CurrentDir(), 4096);
+
     [[maybe_unused]] bool check{false};
     Float elevation{0}, thickness{0};
     auto layerIter = m_layout->GetStackupLayerIter();
