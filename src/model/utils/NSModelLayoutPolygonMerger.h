@@ -19,12 +19,14 @@ public:
 
     void Merge();
     bool GetMergedPolygons(Index layer, Vec<CPtr<PolygonData>> & polygons) const;
+    bool WritePNG(std::string_view dirname, size_t width) const;
 
 private:
     void FillPolygonsFromLayout();
     void FillOneShape(Index layer, Index net, Index mat, CPtr<Shape> shape);
     void MergeLayers();
     void MergeOneLayer(Ptr<LayerMerger> merger);
+    bool WritePNG(Ptr<LayerMerger> merger, std::string_view filename, size_t width) const;
 
 private:
     CId<pkg::Layout> m_layout;
