@@ -10,7 +10,7 @@ template <typename Scalar>
 class ThermalNetwork
 {
 public:
-    inline constexpr static Scalar MIN_R = 1e-6;
+    inline constexpr static Scalar MIN_R = std::numeric_limits<Scalar>::epsilon();
     inline constexpr static Scalar UNKNOWN_T = INVALID_FLOAT;
     struct Node
     {
@@ -58,14 +58,14 @@ public:
     void SetScenario(Index node, Index scen) { m_nodes[node].scen = scen; }
     Index GetScenario(Index node) const { return m_nodes[node].scen; }
 
-    void SetR(Index n1, Index n2, Scalar r)
+    void SetR(Index node1, Index node2, Scalar r)
     {
         r = std::max(r, MIN_R);
-        if (n1 > n2) std::swap(n1, n2);
-        auto iter = m_nodes[n1].ns.find(n2);
-        if (iter == m_nodes[n1].ns.cend())
-            iter = m_nodes[n1].ns.emplace(n2, r).first;
-        iter->second = r;
+        if (node1 > node2) std::swap(node1, node2);
+        auto & n1 = m_nodes[node1];
+        if (auto iter = n1.ns.find(node2); iter != n1.ns.cend())
+            iter->second = 1 / (1 / r + 1 / iter->second);
+        else n1.ns.emplace(node2, r);
     }
 
     void BuildIndexMap()

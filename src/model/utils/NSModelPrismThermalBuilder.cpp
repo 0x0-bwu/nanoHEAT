@@ -30,7 +30,9 @@ bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerP
     points.reserve(points.size() + steinerPoints.size());
     points.insert(points.end(), steinerPoints.begin(), steinerPoints.end());
     mesh2d::MergeClosePointsAndRemapEdge(points, edges, tolerance);
+    mesh2d::SplitOverlengthEdges(points, edges, maxLen);
     mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
+    // mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
     mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
     if (meshSettings.dumpMeshFile)
         GeometryIO::WritePNG(std::string(nano::CurrentDir()) + "/meshOut.png", triangulation, 4096);
