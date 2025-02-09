@@ -152,9 +152,9 @@ void t_build_prism_thermal_model2()
     auto & meshSettings = settings.meshSettings;
     meshSettings.minAlpha = 15;
     meshSettings.minLen = 0.01;
-    meshSettings.maxLen = 0.50;
-    meshSettings.tolerance = 1e-2;
-    meshSettings.maxIter = 1e5;
+    meshSettings.maxLen = 2.00;
+    meshSettings.tolerance = 0;
+    meshSettings.maxIter = 1e6;
     meshSettings.dumpMeshFile = true;
 
     auto & bcSettings = settings.bcSettings;
