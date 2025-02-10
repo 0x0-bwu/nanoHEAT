@@ -19,7 +19,7 @@ UPtr<typename PrismThermalNetworkBuilder<Scalar>::Network> PrismThermalNetworkBu
     auto network = std::make_unique<Network>(size);
 
     if (auto threads = nano::thread::Threads(); threads > 1) {
-        auto & pool = nano::thread::Pool();
+        auto pool = nano::thread::Pool();
         size_t size = m_model->TotalPrismElements();
         size_t blocks = threads * 2;
         size_t blockSize = size / blocks;

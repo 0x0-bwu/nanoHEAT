@@ -77,7 +77,7 @@ void LayoutPolygonMerger::FillOneShape(Index layer, Index net, Index mat, CPtr<S
 void LayoutPolygonMerger::MergeLayers()
 {
     if (auto threads = nano::thread::Threads(); threads > 1) {
-        auto & pool = nano::thread::Pool();
+        auto pool = nano::thread::Pool();
         for (const auto & merger : m_mergers)
             pool.Submit(std::bind(&LayoutPolygonMerger::MergeOneLayer, this, merger.second.get()));
     }

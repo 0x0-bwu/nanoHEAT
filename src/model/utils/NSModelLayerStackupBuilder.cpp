@@ -151,7 +151,7 @@ void LayerStackupModelBuilder::AddComponent(CId<Component> component)
 
         if (auto lossPower = component->GetBind<LossPower>(); lossPower) {
             auto scen = lossPower->GetScenario();
-            auto lut = lossPower->GetLookupTable();
+            auto lut = Index(lossPower->GetLookupTable());
             check = AddPowerBlock(Index(material), outline, scen, lut, elevation, thickness);
             NS_ASSERT_MSG(check, "failed to add power block")
         }
