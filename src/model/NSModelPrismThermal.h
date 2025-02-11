@@ -244,8 +244,10 @@ public:
     bool isTopLayer(Index layer) const { return 0 == layer; }
     bool isBotLayer(Index layer) const { return 1 + layer == TotalLayers(); }
     virtual void SearchElementIndices(const Vec<FCoord3D> & monitors, Vec<Index> & indices) const;
-private:
+protected:
     NS_SERIALIZATION_FUNCTIONS_DECLARATION;
+
+protected:
     NS_CLASS_MEMBERS_DEFINE(
         (Float, scaleH2Unit),
         (Float, scale2Meter),

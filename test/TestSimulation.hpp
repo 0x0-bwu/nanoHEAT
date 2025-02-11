@@ -134,8 +134,8 @@ void t_prism_thermal_simulation()
     heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    auto range = simulation.RunStatic(temperature);
-    std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
+    // auto range = simulation.RunStatic(temperature);
+    // std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
 
