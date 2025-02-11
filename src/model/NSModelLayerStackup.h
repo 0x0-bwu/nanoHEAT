@@ -112,7 +112,6 @@ public:
     Height GetHeight(Float height) const;
     LayerRange GetLayerRange(Float elevation, Float thickness) const;
     Vec<NPolygon> GetLayerPolygons(Index layer) const;
-
     static bool SliceOverheightLayers(std::list<LayerRange> & ranges, Float ratio);
 
 private:

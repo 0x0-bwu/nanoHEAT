@@ -1,6 +1,7 @@
-#include "NSModelPrismThermalBuilder.h"
+#include "NSModelPrismStackupThermalBuilder.h"
 #include "NSModelPrismMeshGenerator.h"
 #include "NSModelLayerStackupQuery.h"
+#include "NSModelLayerStackup.h"
 #include "NSModel.h"
 
 namespace nano::heat::model::utils {
@@ -8,9 +9,9 @@ namespace nano::heat::model::utils {
 using namespace generic::geometry;
 inline static constexpr auto NO_NEIGHBOR = generic::geometry::tri::noNeighbor;
 
-PrismThermalModelBuilder::PrismThermalModelBuilder(Ref<Model> model) : m_model(model) {}
+PrismStackupThermalModelBuilder::PrismStackupThermalModelBuilder(Ref<Model> model) : m_model(model) {}
 
-bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
+bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
 {
     if (not layout) return false;
 
@@ -21,21 +22,50 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
     return Build(layout, stackupModel.get(), settings.meshSettings, settings.bcSettings);
 }
 
-bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
 {
     if (not layout or not stackupModel) return false;
-    
-    auto triangulation = std::make_shared<typename PrismThermalModel::PrismTemplate>();
-    const auto & coordUnit = layout->GetCoordUnit();
-    if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation)) return false;
-    NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
-    for (Index layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
-        m_model.SetLayerPrismTemplate(layer, triangulation);
-        PrismLayer prismLayer(layer);
-        [[maybe_unused]] auto check = 
-        stackupModel->GetLayerHeightThickness(layer, prismLayer.elevation, prismLayer.thickness);
-        NS_ASSERT(check);
+    const auto & coordUnit = layout->GetCoordUnit();
+    Vec<Vec<NPolygon>> layerPolygons{stackupModel->GetLayerPolygons(0)};
+    Vec<SPtr<PrismTemplate>> prismTemplates{std::make_shared<PrismTemplate>()};
+    HashMap<Index, Index> layer2Template{{0, 0}};
+    for (Index i = 1; i < stackupModel->TotalLayers(); ++i) {
+        auto indices = stackupModel->GetLayerPolygonIds(i);
+        if (indices != stackupModel->GetLayerPolygonIds(i - 1)) {
+            auto polygons = stackupModel->GetLayerPolygons(i);
+            if (meshSettings.imprintUpperLayer) {
+                const auto & upperLyr = layerPolygons.back();
+                polygons.insert(polygons.end(), upperLyr.begin(), upperLyr.end());
+            }
+            layerPolygons.emplace_back(std::move(polygons));
+            prismTemplates.emplace_back(new PrismTemplate);
+        }
+        layer2Template.emplace(i, prismTemplates.size() - 1);
+    }
+    
+    Vec<NCoord2D> steinerPoints;//todo
+    NS_TRACE("generate mesh for %1% layers", prismTemplates.size());
+    if (nano::thread::Threads() > 1) {
+        auto pool = nano::thread::Pool();
+        Vec<std::string> workDirs;
+        for (Index i = 0; i < prismTemplates.size(); ++i) {
+            auto workDir = workDirs.emplace_back(std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i)).c_str();
+            pool.Submit(std::bind(GenerateMesh, std::ref(layerPolygons.at(i)), std::ref(steinerPoints), std::ref(coordUnit), 
+                        std::ref(meshSettings), std::ref(*prismTemplates.at(i)), workDir));
+        }
+    }
+    else {
+        for (size_t i = 0; i < prismTemplates.size(); ++i) {
+            auto workDir = std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i);
+            GenerateMesh(layerPolygons.at(i), steinerPoints, coordUnit, meshSettings, *prismTemplates.at(i), workDir.c_str());
+        }
+    }
+
+    for (size_t i = 0; i < stackupModel->TotalLayers(); ++i) {
+        m_model.SetLayerPrismTemplate(i, prismTemplates.at(layer2Template.at(i)));
+        PrismLayer prismLayer(i);
+        [[maybe_unused]] auto check = stackupModel->GetLayerHeightThickness(i, prismLayer.elevation, prismLayer.thickness); { NS_ASSERT(check) }
         m_model.AppendLayer(std::move(prismLayer));
     }
 
@@ -49,42 +79,43 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     LayerStackupModelQuery query(*stackupModel);
     const auto & powerBlocks = stackupModel->GetAllPowerBlocks();
     HashMap<Index, HashMap<Index, Index>> templateIdMap;
-    auto buildOnePrismLayer = [&](Index index) {
+    auto buildOnePrismLayer = [&](size_t index) {
         auto & prismLayer = m_model->layers.at(index);
-        auto & idMap = templateIdMap.emplace(prismLayer.id, HashMap<Index, Index>()).first->second;
+        auto & idMap = templateIdMap.emplace(prismLayer.id, HashMap<Index, Index>{}).first->second;    
         auto triangulation = m_model.GetLayerPrismTemplate(index);
         for (size_t it = 0; it < triangulation->triangles.size(); ++it) {
-            NS_ASSERT(stackupModel->hasPolygon(prismLayer.id));
+            NS_ASSERT(stackupModel->hasPolygon(prismLayer.id))
             auto ctPoint = tri::TriangulationUtility<NCoord2D>::GetCenter(*triangulation, it).Cast<NCoord>();
             auto pid = query.SearchPolygon(prismLayer.id, ctPoint);
             if (INVALID_INDEX == pid) continue;;
             if (INVALID_INDEX == stackupModel->GetMaterialId(pid)) continue;
             if (fluidMats.count(stackupModel->GetMaterialId(pid))) continue;
 
-            auto & elem = prismLayer.AddElement(it);
-            idMap.emplace(it, elem.id);
-            elem.matId = stackupModel->GetMaterialId(pid);
-            elem.netId = stackupModel->GetNetId(pid);
+            auto & ele = prismLayer.AddElement(it);
+            idMap.emplace(it, ele.id);
+            ele.matId = stackupModel->GetMaterialId(pid);
+            ele.netId = stackupModel->GetNetId(pid);
             auto iter = powerBlocks.find(pid);
             if (iter != powerBlocks.cend() &&
                 prismLayer.id == stackupModel->GetLayerIndexByHeight(iter->second.range.high)) {
                 auto area = tri::TriangulationUtility<NCoord2D>::GetTriangleArea(*triangulation, it);
-                elem.powerRatio = area / stackupModel->GetAllPolygons().at(pid).Area();
-                elem.scenId = iter->second.scen;
-                elem.powerLutId = iter->second.powerLut;
+                ele.powerRatio = area / stackupModel->GetAllPolygons().at(pid).Area();
+                ele.scenId = iter->second.scen;
+                ele.powerLutId = iter->second.powerLut;
             }
         }
         NS_TRACE("layer %1%'s total elements: %2%", index, prismLayer.elements.size());
     };
 
-    for (Index index = 0; index < m_model.TotalLayers(); ++index)
+    for (size_t index = 0; index < m_model.TotalLayers(); ++index)
         buildOnePrismLayer(index);
-    
+
     //build connection
     for (Index index = 0; index < m_model.TotalLayers(); ++index) {
         auto & layer = m_model->layers.at(index);
         auto & elements = layer.elements;
         const auto & currIdMap = templateIdMap.at(layer.id);
+        auto triangulation = m_model.GetLayerPrismTemplate(index);
         for (auto & ele : elements) {
             //layer neighbors
             const auto & triangle = triangulation->triangles.at(ele.templateId);
@@ -93,23 +124,14 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
                 auto iter = currIdMap.find(triangle.neighbors.at(nid));
                 if (iter != currIdMap.cend()) ele.neighbors[nid] = iter->second;
             }
-        }
-        if (not m_model.isBotLayer(index)) {
-            auto & lowerLayer = m_model->layers.at(index + 1);
-            auto & lowerEles = lowerLayer.elements;
-            const auto & lowerIdMap = templateIdMap.at(lowerLayer.id);
-            for (auto & ele : elements) {
-                auto iter = lowerIdMap.find(ele.templateId);
-                if (iter != lowerIdMap.cend()) {
-                    auto & lowerEle = lowerEles.at(iter->second);
-                    lowerEle.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = ele.id;
-                    ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = lowerEle.id;
-                }
-            }
+            ele.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = ele.id;//todo
+            ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = ele.id;//todo
         }
     }
+
     auto scaleH2Unit = coordUnit.Scale2Unit();
     auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::Meter);
+
     m_model.BuildPrismModel(scaleH2Unit, scale2Meter);
     m_model.AddBondingWires(stackupModel);
     NS_TRACE("total elements: %1%, prism: %2%, line: %3%", 
@@ -136,7 +158,6 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     }
     m_model->layout = layout;
     return true;
+
 }
-
-
 } // namespace nano::heat::model::utils

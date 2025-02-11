@@ -84,6 +84,7 @@ struct PrismMeshSettings
     PrismMeshSettings()
     {
         NS_INIT_HANA_STRUCT(*this);
+        imprintUpperLayer = true;
         minAlpha = 15;
         maxIter = 1e5;
         minLen = 1e-3;
