@@ -45,8 +45,8 @@ UPtr<typename PrismThermalNetworkBuilder<Scalar>::Network> PrismThermalNetworkBu
 template <typename Scalar>
 void PrismThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scalar> & iniT, Ptr<Network> network, size_t start, size_t end) const
 {
-    auto topBC = m_model->GetUniformBC(Orientation::Top);
-    auto botBC = m_model->GetUniformBC(Orientation::Bot);
+    auto topBC = m_model->GetUniformBC(Orientation::TOP);
+    auto botBC = m_model->GetUniformBC(Orientation::BOT);
     
     for (size_t i = start; i < end; ++i) {
         const auto & inst = m_model->GetPrism(i);
@@ -199,8 +199,8 @@ void PrismThermalNetworkBuilder<Scalar>::BuildLineElement(const Vec<Scalar> & in
 template <typename Scalar>
 void PrismThermalNetworkBuilder<Scalar>::ApplyBlockBCs(Ptr<Network> network) const
 {
-    const auto & topBCs = m_model->GetBlockBCs(Orientation::Top);
-    const auto & botBCs = m_model->GetBlockBCs(Orientation::Bot);
+    const auto & topBCs = m_model->GetBlockBCs(Orientation::TOP);
+    const auto & botBCs = m_model->GetBlockBCs(Orientation::BOT);
     if (topBCs.empty() && botBCs.empty()) return;
 
     model::utils::PrismThermalModelQuery query(*m_model);

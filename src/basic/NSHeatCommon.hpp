@@ -6,7 +6,7 @@
 
 namespace nano::heat {
 
-enum class Orientation { Top, Bot };
+enum class Orientation { TOP, BOT };
 
 struct ThermalBoundaryCondition
 {
@@ -129,7 +129,7 @@ struct BoundaryCondtionSettings
 
     void AddBlockBC(Orientation ori, FBox2D box, BC::Type type, Float value)
     {
-        auto i = Orientation::Top == ori ? 0 : 1;
+        auto i = Orientation::TOP == ori ? 0 : 1;
         blockBCs[i].emplace_back(box, BC{type, value});
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
@@ -145,7 +145,6 @@ struct BoundaryCondtionSettings
 
 struct PrismThermalModelExtractionSettings
 {
-
     BOOST_HANA_DEFINE_STRUCT(PrismThermalModelExtractionSettings,
         (PrismMeshSettings, meshSettings),
         (BoundaryCondtionSettings, bcSettings),

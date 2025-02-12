@@ -25,8 +25,8 @@ NS_SERIALIZATION_FUNCTIONS_IMP(PrismThermalModel)
 PrismThermalModel::PrismThermalModel()
 {
     NS_CLASS_MEMBERS_INITIALIZE
-    m_.blockBCs.emplace(Orientation::Top, Vec<BlockBC>());
-    m_.blockBCs.emplace(Orientation::Bot, Vec<BlockBC>());
+    m_.blockBCs.emplace(Orientation::TOP, Vec<BlockBC>());
+    m_.blockBCs.emplace(Orientation::BOT, Vec<BlockBC>());
 }
 
 void PrismThermalModel::SetLayerPrismTemplate(Index layer, SPtr<PrismTemplate> prismTemplate)
