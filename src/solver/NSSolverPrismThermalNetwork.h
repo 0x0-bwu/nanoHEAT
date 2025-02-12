@@ -1,10 +1,12 @@
 #pragma once
 #include "basic/NSHeatCommon.hpp"
 
-
 namespace nano::heat {
 
-namespace model { class PrismThermalModel; }
+namespace model { 
+class PrismThermalModel;
+class PrismStackupThermalModel;
+} // namespace model
 
 namespace solver {
 
@@ -30,6 +32,19 @@ public:
 
 private:
     CPtr<model::PrismThermalModel> m_model;
+};
+
+class PrismStackupThermalNetworkStaticSolver
+{
+public:
+    ThermalNetworkStaticSolverSettings settings;
+    using Scalar = ThermalNetworkStaticSolver::Scalar;
+    explicit PrismStackupThermalNetworkStaticSolver(CPtr<model::PrismStackupThermalModel> model);
+
+    Arr2<Float> Solve(Vec<Float> & temperatures) const;
+
+private:
+    CPtr<model::PrismStackupThermalModel> m_model;
 };
 
 } // namespace solver

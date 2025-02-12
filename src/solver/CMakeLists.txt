@@ -1,4 +1,5 @@
 add_library(nanoHeatSolver
+    utils/NSPrismStackupThermalNetworkBuilder.cpp
     utils/NSPrismThermalNetworkBuilder.cpp
     NSSolverPrismThermalNetwork.cpp
 )

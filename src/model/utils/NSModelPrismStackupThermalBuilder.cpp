@@ -139,17 +139,17 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
 
     // bc
     if (bcSettings.uniformBCs[0].isValid())
-        m_model.SetUniformBC(Orientation::Top, bcSettings.uniformBCs[0]);
+        m_model.SetUniformBC(Orientation::TOP, bcSettings.uniformBCs[0]);
     if (bcSettings.uniformBCs[1].isValid())
-        m_model.SetUniformBC(Orientation::Bot, bcSettings.uniformBCs[1]);
+        m_model.SetUniformBC(Orientation::BOT, bcSettings.uniformBCs[1]);
         
     for (const auto & block : bcSettings.blockBCs[0]) {
         if (not block.second.isValid()) continue;
-        m_model.AddBlockBC(Orientation::Top, coordUnit.toCoord(block.first), block.second);
+        m_model.AddBlockBC(Orientation::TOP, coordUnit.toCoord(block.first), block.second);
     }
     for (const auto & block : bcSettings.blockBCs[1]) {
         if (not block.second.isValid()) continue;
-        m_model.AddBlockBC(Orientation::Bot, coordUnit.toCoord(block.first), block.second);
+        m_model.AddBlockBC(Orientation::BOT, coordUnit.toCoord(block.first), block.second);
     }
         
     if (meshSettings.dumpMeshFile) { 

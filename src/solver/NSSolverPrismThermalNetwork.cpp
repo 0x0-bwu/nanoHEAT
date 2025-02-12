@@ -1,6 +1,8 @@
 #include "NSSolverPrismThermalNetwork.h"
+#include "utils/NSPrismStackupThermalNetworkBuilder.h"
 #include "utils/NSPrismThermalNetworkBuilder.h"
 #include "network/NSThermalNetworkSolver.hpp"
+#include "model/NSModelPrismStackupThermal.h"
 #include "model/NSModelPrismThermal.h"
 #include "model/NSModelTraits.hpp"
 namespace nano::heat::solver {
@@ -75,6 +77,7 @@ bool ThermalNetworkStaticSolver::Solve(CPtr<typename ThermalNetworkBuilder::Mode
 }
 
 template bool ThermalNetworkStaticSolver::Solve<utils::PrismThermalNetworkBuilder<ThermalNetworkStaticSolver::Scalar>>(CPtr<model::PrismThermalModel> model, Vec<ThermalNetworkStaticSolver::Scalar> & results) const;
+template bool ThermalNetworkStaticSolver::Solve<utils::PrismStackupThermalNetworkBuilder<ThermalNetworkStaticSolver::Scalar>>(CPtr<model::PrismStackupThermalModel> model, Vec<ThermalNetworkStaticSolver::Scalar> & results) const;
 
 PrismThermalNetworkStaticSolver::PrismThermalNetworkStaticSolver(CPtr<model::PrismThermalModel> model)
  : m_model(model)
@@ -100,5 +103,28 @@ Arr2<Float> PrismThermalNetworkStaticSolver::Solve(Vec<Float> & temperatures) co
     return {minT, maxT};
 }
 
+PrismStackupThermalNetworkStaticSolver::PrismStackupThermalNetworkStaticSolver(CPtr<model::PrismStackupThermalModel> model)
+ : m_model(model)
+{
+}
+
+Arr2<Float> PrismStackupThermalNetworkStaticSolver::Solve(Vec<Float> & temperatures) const
+{
+    Vec<Scalar> results;
+    auto res = ThermalNetworkStaticSolver().Solve<utils::PrismStackupThermalNetworkBuilder<Scalar>>(m_model, results);
+    if (not res) return {INVALID_FLOAT, INVALID_FLOAT};
+
+    auto minT = * std::min_element(results.cbegin(), results.cend());
+    auto maxT = * std::max_element(results.cbegin(), results.cend());
+    temperatures.resize(settings.probs.size());
+    for (size_t i = 0; i < settings.probs.size(); ++i)
+        temperatures[i] = results.at(settings.probs.at(i));
+    
+    if (settings.dumpHotmap) {
+        auto hotmapFile = std::string(nano::CurrentDir()) + "/hotmap.vtk";
+        m_model->WriteVTK<Scalar>(hotmapFile, &results);
+    }
+    return {minT, maxT};
+}
 
 } // namespace nano::heat::solver
