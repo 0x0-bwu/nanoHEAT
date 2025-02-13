@@ -13,7 +13,6 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
 {
     using namespace generic::geometry;
     if (meshSettings.dumpMeshFile) {
-        NS_TRACE("writing mesh file to %1%", workDir);
         GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
         GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
     }
@@ -29,13 +28,17 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     points.reserve(points.size() + steinerPoints.size());
     points.insert(points.end(), steinerPoints.begin(), steinerPoints.end());
     mesh2d::MergeClosePointsAndRemapEdge(points, edges, tolerance);
-    mesh2d::SplitOverlengthEdges(points, edges, maxLen);
+    if (meshSettings.preSplitEdge)
+        mesh2d::SplitOverlengthEdges(points, edges, maxLen);
     mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
-    // mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
+    if (meshSettings.addBalancedPoints)
+        mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
     mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
 
-    if (meshSettings.dumpMeshFile)
+    if (meshSettings.dumpMeshFile) {
+        NS_TRACE("writing mesh file to %1%, total triangles: %2%", workDir, triangulation.triangles.size());
         GeometryIO::WritePNG(std::string(workDir) + "/meshOut.png", triangulation, 4096);
+    }
     return true;
 }
 

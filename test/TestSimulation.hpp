@@ -92,7 +92,7 @@ void t_prism_thermal_simulation_simple()
     Database::Shutdown();
 }
 
-void t_prism_thermal_simulation()
+void t_prism_thermal_simulation1()
 {
     using namespace nano::heat;
     using namespace nano::package;
@@ -101,15 +101,15 @@ void t_prism_thermal_simulation()
     BOOST_CHECK(res);
 
     unsigned int version{0};
-    heat::model::PrismThermalModel model;
-    auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-    res = nano::Load(model, version, prismThermalModelFile, ArchiveFormat::BIN);
+    heat::model::PrismStackupThermalModel prismStackupModel;
+    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
     BOOST_CHECK(res);
-    BOOST_CHECK(model.GetLayout());
+    BOOST_CHECK(prismStackupModel.GetLayout());
 
     auto getDieMonitors = [&] {
         Vec<FCoord3D> monitors;
-        auto layout = model.GetLayout();
+        auto layout = prismStackupModel.GetLayout();
         Float elevation{0}, thickness{0};
         package::utils::LayoutRetriever retriever(layout);
         std::vector<std::string> cellInsts{"TopBridge1", "TopBridge2", "BotBridge1", "BotBridge2"};
@@ -132,11 +132,77 @@ void t_prism_thermal_simulation()
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
-    heat::simulation::PrismThermalSimulation simulation(&model, setup);
+    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
 
     Vec<Float> temperature;
-    // auto range = simulation.RunStatic(temperature);
+    // auto range = prismStackupSim.RunStatic(temperature);
     // std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
+    Database::Shutdown();
+}
+
+void t_prism_thermal_simulation2()
+{
+    using namespace nano::heat;
+    using namespace nano::package;
+    nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/test");
+
+    auto filename = std::string(nano::CurrentDir()) + "/database.bin";
+    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
+
+    unsigned int version{0};
+    heat::model::PrismStackupThermalModel prismStackupModel;
+    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
+    BOOST_CHECK(prismStackupModel.GetLayout());
+
+    auto getDieMonitors = [&] {
+        Vec<FCoord3D> monitors;
+        return monitors;
+    };
+
+    // nano::thread::SetThreads(1);//for debug
+    PrismThermalSimulationSetup setup;
+    setup.monitors = getDieMonitors();
+    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
+
+    Vec<Float> temperature;
+    auto range = prismStackupSim.RunStatic(temperature);
+    std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
+    Database::Shutdown();
+}
+
+void t_prism_thermal_simulation3()
+{
+    using namespace nano::heat;
+    using namespace nano::package;
+    nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/jetson-nano-baseboard");
+
+    auto filename = std::string(nano::CurrentDir()) + "/database.bin";
+    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
+
+    unsigned int version{0};
+    heat::model::PrismStackupThermalModel prismStackupModel;
+    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
+    BOOST_CHECK(prismStackupModel.GetLayout());
+
+    auto getDieMonitors = [&] {
+        Vec<FCoord3D> monitors;
+        return monitors;
+    };
+
+    // nano::thread::SetThreads(1);//for debug
+    PrismThermalSimulationSetup setup;
+    setup.monitors = getDieMonitors();
+    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
+
+    Vec<Float> temperature;
+    auto range = prismStackupSim.RunStatic(temperature);
+    std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
 
@@ -145,7 +211,9 @@ test_suite * create_nano_heat_simulation_test_suite()
     test_suite * simulation_suite = BOOST_TEST_SUITE("s_heat_simulation_test");
     //
     simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation_simple));
-    simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation));
+    simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation1));
+    // simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation2));
+    // simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation3));
     //
     return simulation_suite;
 }

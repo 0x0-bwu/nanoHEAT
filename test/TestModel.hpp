@@ -43,7 +43,7 @@ void t_build_layer_stackup_model()
     Database::Shutdown();
 }
 
-void t_build_prism_thermal_model()
+void t_build_prism_thermal_model1()
 {
     using namespace nano::heat;
     using namespace nano::package;
@@ -116,7 +116,7 @@ void t_build_prism_thermal_model2()
 
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/test");
 
-    Database::Create("kicad_test2");
+    Database::Create("test");
     auto filename = std::string(nano::CurrentDir()) + ".kicad_pcb";
     auto package = extension::CreateFromKiCad(filename.c_str());
     auto layout = package->GetTop()->GetCell()->GetLayout().ConstCast();
@@ -156,6 +156,10 @@ void t_build_prism_thermal_model2()
         footprint->SetSolderBallBumpThickness(0.1);
         comp->Bind<power::LossPower>(lossPower);
     }
+
+    filename = std::string(nano::CurrentDir()) + "/database.bin";
+    auto res = Database::SaveCurrent(filename, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
 
     PrismThermalModelExtractionSettings settings;
     settings.layerSettings.addCircleCenterAsSteinerPoint = true;
@@ -165,16 +169,19 @@ void t_build_prism_thermal_model2()
     meshSettings.minLen = 0.01;
     meshSettings.maxLen = 2.00;
     meshSettings.tolerance = 0;
-    meshSettings.maxIter = 1e6;
+    meshSettings.maxIter = 1e5;
     meshSettings.dumpMeshFile = true;
+    meshSettings.imprintUpperLayer = true;
 
     auto & bcSettings = settings.bcSettings;
     bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
     bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
 
-    auto model = model::CreatePrismThermalModel(layout, settings);
-
-    BOOST_CHECK(model);
+    auto prismStackupModel = model::CreatePrismStackupThermalModel(layout, settings);
+    BOOST_CHECK(prismStackupModel);
+    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+    nano::Save(*prismStackupModel, CURRENT_VERSION.toInt(), prismStackupThermalModelFile, ArchiveFormat::BIN);
+    Database::Shutdown();
 }
 
 
@@ -184,7 +191,7 @@ void t_build_prism_thermal_model3()
     using namespace nano::package;
 
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/jetson-nano-baseboard");
-    Database::Create("kicad_test3");
+    Database::Create("jetson-nano-baseboard");
 
     auto filename = std::string(nano::CurrentDir()) + ".kicad_pcb";
     auto package = extension::CreateFromKiCad(filename.c_str());
@@ -226,24 +233,33 @@ void t_build_prism_thermal_model3()
         comp->Bind<power::LossPower>(lossPower);
     }
 
+    filename = std::string(nano::CurrentDir()) + "/database.bin";
+    auto res = Database::SaveCurrent(filename, ArchiveFormat::BIN);
+    BOOST_CHECK(res);
+
     PrismThermalModelExtractionSettings settings;
     settings.layerSettings.addCircleCenterAsSteinerPoint = true;
 
     auto & meshSettings = settings.meshSettings;
     meshSettings.minAlpha = 15;
     meshSettings.minLen = 0.01;
-    meshSettings.maxLen = 0.50;
-    meshSettings.tolerance = 1e-2;
-    meshSettings.maxIter = 1e5;
+    meshSettings.maxLen = 2;
+    meshSettings.tolerance = 0;
+    meshSettings.maxIter = 1e7;
     meshSettings.dumpMeshFile = true;
+    meshSettings.preSplitEdge = true;
+    // meshSettings.addBalancedPoints = true;
+    meshSettings.imprintUpperLayer = true;
 
     auto & bcSettings = settings.bcSettings;
     bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
     bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 100);
 
-    auto model = model::CreatePrismThermalModel(layout, settings);
-
-    BOOST_CHECK(model);
+    auto prismStackupModel = model::CreatePrismStackupThermalModel(layout, settings);
+    BOOST_CHECK(prismStackupModel);
+    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+    nano::Save(*prismStackupModel, CURRENT_VERSION.toInt(), prismStackupThermalModelFile, ArchiveFormat::BIN);
+    Database::Shutdown();
 }
 
 test_suite * create_nano_heat_model_test_suite()
@@ -251,8 +267,7 @@ test_suite * create_nano_heat_model_test_suite()
     test_suite * model_suite = BOOST_TEST_SUITE("s_heat_model_test");
     //
     model_suite->add(BOOST_TEST_CASE(&t_build_layer_stackup_model));
-    model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model));
-
+    model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model1));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model2));
     // model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model3));
     //

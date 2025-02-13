@@ -21,6 +21,12 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     m_layout = layout;
     m_retriever = std::make_unique<LayoutRetriever>(m_layout);
 
+    [[maybe_unused]] bool check{false};
+    Float elevation{0}, thickness{0};
+    check = m_retriever->GetLayoutHeightThickness(elevation, thickness);
+    NS_ASSERT_MSG(check, "failed to get layout height thickness");
+    AddPolygon(INVALID_INDEX, INVALID_INDEX, m_layout->GetBoundary()->GetOutline(), false, elevation, thickness);
+
     NS_TRACE("start merging layout polygons");
     using PolygonData = typename LayoutPolygonMerger::PolygonData;
     LayoutPolygonMerger merger(m_layout);
@@ -29,8 +35,6 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
     if (m_model->settings.dumpPNG)
         merger.WritePNG(nano::CurrentDir(), 4096);
 
-    [[maybe_unused]] bool check{false};
-    Float elevation{0}, thickness{0};
     auto layerIter = m_layout->GetStackupLayerIter();
     while (auto layer = layerIter.Next()) {
         auto dieMat = layer->GetDielectricMaterial();
