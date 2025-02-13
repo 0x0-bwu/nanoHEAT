@@ -90,7 +90,7 @@ void t_build_prism_thermal_model()
         BOOST_CHECK(prismModel);
 
         auto prismVtk = std::string(nano::CurrentDir()) + "/prism.vtk";
-        prismModel->WriteVTK<Float>(vtkFile);
+        prismModel->WriteVTK<Float>(prismVtk);
         auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
         nano::Save(*prismModel, CURRENT_VERSION.toInt(), prismThermalModelFile, ArchiveFormat::BIN);
     }
