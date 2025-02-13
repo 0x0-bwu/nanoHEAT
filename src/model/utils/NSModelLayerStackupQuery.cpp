@@ -28,7 +28,11 @@ Index LayerStackupModelQuery::SearchPolygon(Index layer, const NCoord2D & pt) co
     m_rtrees.at(layer)->query(boost::geometry::index::intersects(NBox2D(pt, pt)), std::back_inserter(results));
     if (results.empty()) return INVALID_INDEX;
     const auto & polygons = m_model->polygons;
-    auto cmp = [&](auto i1, auto i2){ return polygons.at(i1).Area() > polygons.at(i2).Area(); };
+    auto cmp = [&](auto i1, auto i2){ 
+        if (polygons.at(i1).Area() > polygons.at(i2).Area()) return true;
+        if (auto mat = m_model.GetMaterialId(i1); INVALID_INDEX == mat) return true;
+        return false;
+    };
     std::priority_queue<size_t, Vec<size_t>, decltype(cmp)> pq(cmp);
     for (const auto & result : results) {
         if (generic::geometry::Contains(polygons.at(result.second), pt))
