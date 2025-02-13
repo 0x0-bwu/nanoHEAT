@@ -80,6 +80,7 @@ void LayoutPolygonMerger::MergeLayers()
         auto pool = nano::thread::Pool();
         for (const auto & merger : m_mergers)
             pool.Submit(std::bind(&LayoutPolygonMerger::MergeOneLayer, this, merger.second.get()));
+        pool.Wait();
     }
     else {
         for (const auto & merger : m_mergers)

@@ -105,6 +105,7 @@ void t_prism_thermal_simulation()
     auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
     res = nano::Load(model, version, prismThermalModelFile, ArchiveFormat::BIN);
     BOOST_CHECK(res);
+    BOOST_CHECK(model.GetLayout());
 
     auto getDieMonitors = [&] {
         Vec<FCoord3D> monitors;

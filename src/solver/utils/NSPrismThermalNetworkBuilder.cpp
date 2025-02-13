@@ -33,6 +33,7 @@ UPtr<typename PrismThermalNetworkBuilder<Scalar>::Network> PrismThermalNetworkBu
         size_t end = size;
         if(begin != end)
             pool.Submit(std::bind(&PrismThermalNetworkBuilder::BuildPrismElement, this, std::ref(iniT), network.get(), begin, end));        
+        pool.Wait();
     }
     else BuildPrismElement(iniT, network.get(), 0, m_model->TotalPrismElements());
     
@@ -286,24 +287,30 @@ Float PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(Index index, Index 
     auto p1 = GetPrismVertexPoint2D(index, ie);
     auto p2 = GetPrismVertexPoint2D(index, (ie + 1) % 3);
     auto dist = generic::geometry::Distance(p1, p2);
-    return dist * m_model->UnitScale2Meter();
+    dist *= m_model->UnitScale2Meter();
+    NS_ASSERT(dist > 0);
+    return dist;
 }
 
 template <typename Scalar>
 Float PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(Index index, Index ie) const
 {
-    auto h = GetPrismHeight(index);
-    auto w = GetPrismEdgeLength(index, ie);
-    return h * w;
+    auto area = GetPrismHeight(index);
+    area *= GetPrismEdgeLength(index, ie);
+    NS_ASSERT(area > 0);
+    return area;
 }
 
 template <typename Scalar>
 Float PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(Index index) const
 {
-    const auto & points = m_model->GetPoints();
+    const auto & ps = m_model->GetPoints();
     const auto & vs = m_model->GetPrism(index).vertices;
-    auto area = generic::geometry::Triangle3D<FCoord>(points.at(vs[0]), points.at(vs[1]), points.at(vs[2])).Area();
-    return area * m_model->UnitScale2Meter(2);
+    generic::geometry::Triangle3D<FCoord> triangle(ps.at(vs[0]), ps.at(vs[1]), ps.at(vs[2]));
+    auto area = triangle.Area();
+    area *= m_model->UnitScale2Meter(2);
+    NS_ASSERT(area > 0);
+    return area;
 }
 
 template <typename Scalar>
@@ -316,7 +323,9 @@ template <typename Scalar>
 Float PrismThermalNetworkBuilder<Scalar>::GetPrismHeight(Index index) const
 {
     const auto & prism = m_model->GetPrism(index);
-    return m_model->GetLayer(prism.layer).thickness * m_model->UnitScale2Meter();
+    auto h = m_model->GetLayer(prism.layer).thickness * m_model->UnitScale2Meter();
+    NS_ASSERT(h > 0);
+    return h;
 }
 
 template <typename Scalar>
@@ -331,7 +340,9 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(Index index, Float re
 template <typename Scalar>
 Float PrismThermalNetworkBuilder<Scalar>::GetLineVolume(Index index) const
 {
-    return GetLineArea(index) * GetLineLength(index);
+    auto vol = GetLineArea(index) * GetLineLength(index);
+    NS_ASSERT(vol > 0);
+    return vol;
 }
 
 template <typename Scalar>
@@ -340,14 +351,18 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineLength(Index index) const
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     const auto & p1 = m_model->GetPoint(line.endPts.front());
     const auto & p2 = m_model->GetPoint(line.endPts.back());
-    return generic::geometry::Distance(p1, p2) * m_model->UnitScale2Meter();
+    auto dist = generic::geometry::Distance(p1, p2) * m_model->UnitScale2Meter();
+    NS_ASSERT(dist > 0);
+    return dist;
 }
 
 template <typename Scalar>
 Float PrismThermalNetworkBuilder<Scalar>::GetLineArea(Index index) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
-    return generic::math::pi * std::pow(line.radius * m_model->UnitScale2Meter(), 2);
+    auto area = generic::math::pi * std::pow(line.radius * m_model->UnitScale2Meter(), 2);
+    NS_ASSERT(area > 0);
+    return area;
 }
 
 template <typename Scalar>
@@ -359,6 +374,7 @@ Arr3<Float> PrismThermalNetworkBuilder<Scalar>::GetMatThermalConductivity(Index 
     for (size_t i = 0; i < result.size(); ++i) {
         [[maybe_unused]] auto check = prop->GetAnisotropicProperty(refT, i, result[i]);
         NS_ASSERT(check);
+        NS_ASSERT(result[i] > 0);
     }
     return result;
 }
@@ -370,6 +386,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetMatMassDensity(Index matId, Float r
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
     auto prop = mat->GetProperty(Material::Prop::MASS_DENSITY); { NS_ASSERT(prop); }
     [[maybe_unused]] auto check = prop->GetSimpleProperty(refT, result); { NS_ASSERT(check); }
+    NS_ASSERT(result > 0);
     return result;
 }
 
@@ -380,6 +397,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetMatSpecificHeat(Index matId, Float 
     auto mat = CId<Material>(matId); { NS_ASSERT(mat); }
     auto prop = mat->GetProperty(Material::Prop::SPECIFIC_HEAT); { NS_ASSERT(prop); }
     [[maybe_unused]] auto check = prop->GetSimpleProperty(refT, result); { NS_ASSERT(check); }
+    NS_ASSERT(result > 0);
     return result;
 }
 
@@ -390,6 +408,7 @@ Float PrismThermalNetworkBuilder<Scalar>::GetMatResistivity(Index matId, Float r
     auto mat = Id<Material>(matId); { NS_ASSERT(mat); }
     auto prop = mat->GetProperty(Material::Prop::RESISTIVITY); { NS_ASSERT(prop); }
     [[maybe_unused]] auto check = prop->GetSimpleProperty(refT, result); { NS_ASSERT(check); }
+    NS_ASSERT(result > 0);
     return result;
 }
 

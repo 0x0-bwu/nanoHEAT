@@ -18,4 +18,11 @@ struct ThermalModelTraits<PrismThermalModel>
     static bool NeedIteration(const PrismThermalModel & model) { return true;/*todo*/ }
 };
 
+template <>
+struct ThermalModelTraits<PrismStackupThermalModel>
+{
+    static size_t Size(const PrismStackupThermalModel & model) { return model.TotalElements(); }
+    static bool NeedIteration(const PrismStackupThermalModel & model) { return true;/*todo*/ }
+};
+
 } // namespace nano::heat::model::traits
