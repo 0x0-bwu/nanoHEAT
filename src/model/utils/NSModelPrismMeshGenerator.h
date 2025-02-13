@@ -13,6 +13,7 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
 {
     using namespace generic::geometry;
     if (meshSettings.dumpMeshFile) {
+        NS_TRACE("writing mesh file to %1%", workDir);
         GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
         GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
     }
@@ -32,6 +33,7 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
     // mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
     mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
+
     if (meshSettings.dumpMeshFile)
         GeometryIO::WritePNG(std::string(workDir) + "/meshOut.png", triangulation, 4096);
     return true;

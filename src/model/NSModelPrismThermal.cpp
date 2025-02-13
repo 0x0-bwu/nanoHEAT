@@ -86,7 +86,6 @@ void PrismThermalModel::BuildPrismModel(Float scaleH2Unit, Float scale2Meter)
     for (Index i = 0; i < TotalLayers(); ++i)
         m_.indexOffset.emplace_back(m_.indexOffset.back() + m_.layers.at(i).TotalElements());
 
-    const auto & triangles = m_.prismTemplates.at(0)->triangles;
     HashMap<Index, HashMap<Index, Index>> templateIdMap;
     auto getPtIdxMap = [&templateIdMap](Index layer) -> HashMap<size_t, size_t> & {
         auto iter = templateIdMap.find(layer);
@@ -101,6 +100,7 @@ void PrismThermalModel::BuildPrismModel(Float scaleH2Unit, Float scale2Meter)
     for (size_t i = 0; i < total; ++i) {
         auto [lyrIdx, eleIdx] = PrismLocalIndex(i);
         const auto & element = GetPrismElement(lyrIdx, eleIdx);
+        const auto & triangles = GetLayerPrismTemplate(lyrIdx)->triangles;
         auto & instance = m_.prisms.emplace_back(PrismInstance(lyrIdx, eleIdx));
 
         // points

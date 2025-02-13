@@ -76,24 +76,35 @@ void t_build_prism_thermal_model()
 
     Float htc = 5000;
     BoundaryCondtionSettings bcSettings;
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({-29.35,   4.70}, {-20.35,   8.70}), ThermalBoundaryCondition::Type::HTC, htc);
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({-29.35, - 8.70}, {-20.35, - 4.70}), ThermalBoundaryCondition::Type::HTC, htc);
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({  2.75,  11.50}, {  9.75,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({  2.75, -17.00}, {  9.75, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75,  11.50}, {- 2.55,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
-    bcSettings.AddBlockBC(Orientation::Top, FBox2D({- 7.75, -17.00}, {- 2.55, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({-29.35,   4.70}, {-20.35,   8.70}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({-29.35, - 8.70}, {-20.35, - 4.70}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({  2.75,  11.50}, {  9.75,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({  2.75, -17.00}, {  9.75, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({- 7.75,  11.50}, {- 2.55,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
+    bcSettings.AddBlockBC(Orientation::TOP, FBox2D({- 7.75, -17.00}, {- 2.55, -11.50}), ThermalBoundaryCondition::Type::HTC, htc);
     // bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::TEMPERATURE, TempUnit::Celsisu2Kelvin(25));
-    auto model = model::CreatePrismThermalModel(layout, &stackupModel, meshSettings, bcSettings);
-    BOOST_CHECK(model);
 
-    auto vtkFile = std::string(nano::CurrentDir()) + "/prism.vtk";
-    model->WriteVTK<Float>(vtkFile);
-    // BOOST_CHECK(model->TotalElements() == 125449);
-    // BOOST_CHECK(model->TotalPrismElements() == 123337);
-    // BOOST_CHECK(model->TotalLineElements() == 2112);
+    // prism model
+    {
+        auto prismModel = model::CreatePrismThermalModel(layout, &stackupModel, meshSettings, bcSettings);
+        BOOST_CHECK(prismModel);
 
-    auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-    nano::Save(*model, CURRENT_VERSION.toInt(), prismThermalModelFile, ArchiveFormat::BIN);
+        auto prismVtk = std::string(nano::CurrentDir()) + "/prism.vtk";
+        prismModel->WriteVTK<Float>(vtkFile);
+        auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
+        nano::Save(*prismModel, CURRENT_VERSION.toInt(), prismThermalModelFile, ArchiveFormat::BIN);
+    }
+
+    // prism stackup model
+    {
+        auto prismStackupModel = model::CreatePrismStackupThermalModel(layout, &stackupModel, meshSettings, bcSettings);
+        BOOST_CHECK(prismStackupModel);
+
+        auto prismStackupVtk = std::string(nano::CurrentDir()) + "/prism_stackup.vtk";
+        prismStackupModel->WriteVTK<Float>(prismStackupVtk);
+        auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
+        nano::Save(*prismStackupModel, CURRENT_VERSION.toInt(), prismStackupThermalModelFile, ArchiveFormat::BIN);
+    }
 
     Database::Shutdown();
 }

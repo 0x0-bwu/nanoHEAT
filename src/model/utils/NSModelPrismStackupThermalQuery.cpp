@@ -10,6 +10,7 @@ PrismStackupThermalModelQuery::PrismStackupThermalModelQuery(CRef<Model> model, 
             auto pool = nano::thread::Pool();
             for (size_t i = 0; i < m_model.TotalLayers(); ++i)
                 pool.Submit(std::bind(&PrismStackupThermalModelQuery::BuildLayerIndexTree, this, i));
+            pool.Wait();
         }
         else {
             for (size_t i = 0; i < m_model.TotalLayers(); ++i)

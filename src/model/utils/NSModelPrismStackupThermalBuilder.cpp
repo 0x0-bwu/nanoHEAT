@@ -47,13 +47,14 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
     Vec<NCoord2D> steinerPoints;//todo
     NS_TRACE("generate mesh for %1% layers", prismTemplates.size());
     if (nano::thread::Threads() > 1) {
-        auto pool = nano::thread::Pool();
         Vec<std::string> workDirs;
-        for (Index i = 0; i < prismTemplates.size(); ++i) {
-            auto workDir = workDirs.emplace_back(std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i)).c_str();
+        auto pool = nano::thread::Pool();
+        for (Index i = 0; i < prismTemplates.size(); ++i)
+            workDirs.emplace_back(std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i));
+        for (Index i = 0; i < prismTemplates.size(); ++i)
             pool.Submit(std::bind(GenerateMesh, std::ref(layerPolygons.at(i)), std::ref(steinerPoints), std::ref(coordUnit), 
-                        std::ref(meshSettings), std::ref(*prismTemplates.at(i)), workDir));
-        }
+                        std::ref(meshSettings), std::ref(*prismTemplates.at(i)), workDirs.at(i).c_str()));
+        pool.Wait();
     }
     else {
         for (size_t i = 0; i < prismTemplates.size(); ++i) {
@@ -124,8 +125,8 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
                 auto iter = currIdMap.find(triangle.neighbors.at(nid));
                 if (iter != currIdMap.cend()) ele.neighbors[nid] = iter->second;
             }
-            ele.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = ele.id;//todo
-            ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = ele.id;//todo
+            ele.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = NO_NEIGHBOR;
+            ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = NO_NEIGHBOR;
         }
     }
 
