@@ -22,9 +22,13 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     auto tolerance = coordUnit.toCoord(meshSettings.tolerance);
     mesh2d::IndexEdgeList edges;
     mesh2d::Point2DContainer points;
-    mesh2d::Segment2DContainer segments;
-    mesh2d::ExtractIntersections(polygons, segments);
-    mesh2d::ExtractTopology(segments, points, edges);
+    mesh2d::Segment2DContainer segments, intersections;
+
+    auto hull = ConvexHull(polygons);
+    mesh2d::ExtractSegment(hull, segments);
+    mesh2d::ExtractSegments(polygons, segments);
+    mesh2d::ExtractIntersections(segments, intersections);
+    mesh2d::ExtractTopology(intersections, points, edges);
     points.reserve(points.size() + steinerPoints.size());
     points.insert(points.end(), steinerPoints.begin(), steinerPoints.end());
     mesh2d::MergeClosePointsAndRemapEdge(points, edges, tolerance);

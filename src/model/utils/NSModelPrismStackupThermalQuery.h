@@ -12,7 +12,9 @@ public:
     using Model = nano::heat::model::PrismStackupThermalModel;
     explicit PrismStackupThermalModelQuery(CRef<Model> model, bool lazyBuild = false);
     virtual ~PrismStackupThermalModelQuery() = default;
-    
+
+    NTriangle2D GetPrismInstanceTemplate(size_t pid) const;
+
     void IntersectsPrismInstances(Index layer, Index pid, Vec<RtVal> & results) const;
     void SearchPrismInstances(Index layer, const NBox2D & area, Vec<RtVal> & results) const;
     void SearchNearestPrismInstances(Index layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const;

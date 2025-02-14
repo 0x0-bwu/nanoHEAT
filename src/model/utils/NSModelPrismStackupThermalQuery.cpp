@@ -19,6 +19,13 @@ PrismStackupThermalModelQuery::PrismStackupThermalModelQuery(CRef<Model> model, 
     }
 }
 
+NTriangle2D PrismStackupThermalModelQuery::GetPrismInstanceTemplate(size_t pid) const
+{
+    const auto & instance = m_model.GetPrism(pid);
+    const auto & triangulation = *m_model.GetLayerPrismTemplate(instance.layer);
+    return tri::TriangulationUtility<NCoord2D>::GetTriangle(triangulation, m_model.GetPrismElement(instance.layer, instance.element).templateId);
+}
+
 void PrismStackupThermalModelQuery::IntersectsPrismInstances(Index layer, Index pid, Vec<RtVal> & results) const
 {
     const auto & instance = m_model.GetPrism(pid);
@@ -32,7 +39,7 @@ void PrismStackupThermalModelQuery::SearchPrismInstances(Index layer, const NBox
 {
     results.clear();
     auto rtree = BuildLayerIndexTree(layer);
-    rtree->query(boost::geometry::index::intersects(area), std::back_inserter(results));
+    rtree->query(boost::geometry::index::covered_by(area), std::back_inserter(results));
 }
 
 void PrismStackupThermalModelQuery::SearchNearestPrismInstances(Index layer, const NCoord2D & pt, size_t k, Vec<RtVal> & results) const

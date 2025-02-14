@@ -182,7 +182,7 @@ void PrismThermalModel::AddBondingWires(CPtr<LayerStackupModel> stackupModel)
 
 Index PrismThermalModel::AddPoint(FCoord3D point)
 {
-    m_.points.emplace_back(point);
+    m_.points.emplace_back(std::move(point));
     return m_.points.size() - 1;
 }
 
