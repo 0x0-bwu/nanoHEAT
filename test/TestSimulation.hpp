@@ -11,6 +11,7 @@ using namespace boost::unit_test;
 void t_prism_thermal_simulation_simple()
 {
     using namespace nano::package;
+    nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/simple");
     Database::Create("simple");
     auto pkg = nano::Create<Package>("simple");
     BOOST_CHECK(pkg);
@@ -101,15 +102,15 @@ void t_prism_thermal_simulation1()
     BOOST_CHECK(res);
 
     unsigned int version{0};
-    heat::model::PrismStackupThermalModel prismStackupModel;
-    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
-    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
+    heat::model::PrismThermalModel model;
+    filename = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
+    res = nano::Load(model, version, filename, ArchiveFormat::BIN);
     BOOST_CHECK(res);
-    BOOST_CHECK(prismStackupModel.GetLayout());
+    BOOST_CHECK(model.GetLayout());
 
     auto getDieMonitors = [&] {
         Vec<FCoord3D> monitors;
-        auto layout = prismStackupModel.GetLayout();
+        auto layout = model.GetLayout();
         Float elevation{0}, thickness{0};
         package::utils::LayoutRetriever retriever(layout);
         std::vector<std::string> cellInsts{"TopBridge1", "TopBridge2", "BotBridge1", "BotBridge2"};
@@ -132,10 +133,10 @@ void t_prism_thermal_simulation1()
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
-    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
+    heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    // auto range = prismStackupSim.RunStatic(temperature);
+    // auto range = simulation.RunStatic(temperature);
     // std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }

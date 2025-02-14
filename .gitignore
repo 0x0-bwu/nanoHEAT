@@ -5,4 +5,5 @@ build.release
 .DS_store
 test/data/archive
 test/data/package/test
+test/data/package/simple
 test/data/package/jetson-nano-baseboard
