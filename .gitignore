@@ -1,6 +1,7 @@
 build
 build.debug
 build.release
+.vtk
 .vscode
 .DS_store
 test/data/archive
