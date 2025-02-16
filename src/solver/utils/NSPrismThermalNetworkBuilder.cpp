@@ -230,7 +230,7 @@ void PrismThermalNetworkBuilder<Scalar>::ApplyBlockBCs(Ptr<Network> network) con
                     else summary.oHeatFlow += heatFlow;
                 }
                 else if (ThermalBoundaryCondition::Type::HTC == block.second.type) {
-                    network->SetHTC(result.second, value);
+                    network->SetHTC(result.second, value * area);
                     summary.boundaryNodes += 1;
                 }
                 else if (ThermalBoundaryCondition::Type::TEMPERATURE == block.second.type) { 

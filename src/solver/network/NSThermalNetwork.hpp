@@ -99,6 +99,24 @@ public:
         return src;
     }
 
+    std::string msg() const
+    {
+        std::stringstream ss;
+        Scalar minR = std::numeric_limits<Scalar>::max(), maxR = -minR;
+        Scalar minC = std::numeric_limits<Scalar>::max(), maxC = -minC;
+        for (size_t i = 0; i < m_nodes.size(); ++i) {
+            auto & node = m_nodes[i];
+            minC = std::min(minC, node.c);
+            maxC = std::max(maxC, node.c);
+            for (auto & [n, r] : node.ns) {
+                minR = std::min(minR, r);
+                maxR = std::max(maxR, r);
+            }
+        }
+        ss << "Min C: " << minC << ", Max C: " << maxC << std::endl;
+        ss << "Min R: " << minR << ", Max R: " << maxR << std::endl;
+        return ss.str();
+    }
 private:
     Vec<Node> m_nodes;
     HashMap<Index, Index> m_nmMap;

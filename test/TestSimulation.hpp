@@ -84,6 +84,7 @@ void t_prism_thermal_simulation_simple()
 
     nano::thread::SetThreads(1);
     PrismThermalSimulationSetup setup;
+    setup.envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
     setup.monitors = {FCoord3D(2.5, 2.5, 0.1)};
     heat::simulation::PrismThermalSimulation simulation(model.get(), setup);
 
@@ -132,12 +133,13 @@ void t_prism_thermal_simulation1()
 
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
+    setup.envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
     setup.monitors = getDieMonitors();
     heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    // auto range = simulation.RunStatic(temperature);
-    // std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
+    auto range = simulation.RunStatic(temperature);
+    std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
 
@@ -152,11 +154,11 @@ void t_prism_thermal_simulation2()
     BOOST_CHECK(res);
 
     unsigned int version{0};
-    heat::model::PrismStackupThermalModel prismStackupModel;
-    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
-    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
+    heat::model::PrismThermalModel model;
+    auto modelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
+    res = nano::Load(model, version, modelFile, ArchiveFormat::BIN);
     BOOST_CHECK(res);
-    BOOST_CHECK(prismStackupModel.GetLayout());
+    BOOST_CHECK(model.GetLayout());
 
     auto getDieMonitors = [&] {
         Vec<FCoord3D> monitors;
@@ -166,10 +168,10 @@ void t_prism_thermal_simulation2()
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
-    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
+    heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    auto range = prismStackupSim.RunStatic(temperature);
+    auto range = simulation.RunStatic(temperature);
     std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
@@ -185,11 +187,11 @@ void t_prism_thermal_simulation3()
     BOOST_CHECK(res);
 
     unsigned int version{0};
-    heat::model::PrismStackupThermalModel prismStackupModel;
-    auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
-    res = nano::Load(prismStackupModel, version, prismStackupThermalModelFile, ArchiveFormat::BIN);
+    heat::model::PrismThermalModel model;
+    auto modelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
+    res = nano::Load(model, version, modelFile, ArchiveFormat::BIN);
     BOOST_CHECK(res);
-    BOOST_CHECK(prismStackupModel.GetLayout());
+    BOOST_CHECK(model.GetLayout());
 
     auto getDieMonitors = [&] {
         Vec<FCoord3D> monitors;
@@ -199,10 +201,10 @@ void t_prism_thermal_simulation3()
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
-    heat::simulation::PrismStackupThermalSimulation prismStackupSim(&prismStackupModel, setup);
+    heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
     Vec<Float> temperature;
-    auto range = prismStackupSim.RunStatic(temperature);
+    auto range = simulation.RunStatic(temperature);
     std::cout << "temperature range: " << range[0] << ", " << range[1] << std::endl;
     Database::Shutdown();
 }
