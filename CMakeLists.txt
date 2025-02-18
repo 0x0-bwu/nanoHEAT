@@ -208,3 +208,8 @@ option(BUILD_NANO_TEST "Build unit test" ON)
 if (BUILD_NANO_TEST)
 	add_subdirectory(test)
 endif()
+
+option(BUILD_NANO_EXAMPLE "Build examples" ON)
+if (BUILD_NANO_EXAMPLE)
+	add_subdirectory(examples)
+endif()

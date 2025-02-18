@@ -130,8 +130,8 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
                 auto iter = currIdMap.find(triangle.neighbors.at(nid));
                 if (iter != currIdMap.cend()) ele.neighbors[nid] = iter->second;
             }
-            ele.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = NO_NEIGHBOR;
-            ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = NO_NEIGHBOR;
+            ele.neighbors[PrismElement::TOP_NEIGHBOR_INDEX] = ele.id;
+            ele.neighbors[PrismElement::BOT_NEIGHBOR_INDEX] = ele.id;
         }
     }
 
