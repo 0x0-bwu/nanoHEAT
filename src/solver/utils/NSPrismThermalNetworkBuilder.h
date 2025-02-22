@@ -24,7 +24,7 @@ public:
     using Network = network::ThermalNetwork<Scalar>;
     explicit PrismThermalNetworkBuilder(CPtr<ModelType> model);
 
-    UPtr<Network > Build(const Vec<Scalar> & iniT) const;
+    UPtr<Network> Build(const Vec<Scalar> & iniT) const;
 
 protected:
     virtual void BuildPrismElement(const Vec<Scalar> & iniT, Ptr<Network> network, Index start, Index end) const;
@@ -42,17 +42,17 @@ protected:
     FCoord2D GetPrismCenterPoint2D(Index index) const;
 
     /// unit: SI
-    Float GetPrismCenterDist2Side(Index index, Index ie) const;
-    Float GetPrismEdgeLength(Index index, Index ie) const;
-    Float GetPrismSideArea(Index index, Index ie) const;
-    Float GetPrismTopBotArea(Index index) const;
-    Float GetPrismVolume(Index index) const;
-    Float GetPrismHeight(Index index) const;
+    Float64 GetPrismCenterDist2Side(Index index, Index ie) const;
+    Float64 GetPrismEdgeLength(Index index, Index ie) const;
+    Float64 GetPrismSideArea(Index index, Index ie) const;
+    Float64 GetPrismTopBotArea(Index index) const;
+    Float64 GetPrismVolume(Index index) const;
+    Float64 GetPrismHeight(Index index) const;
 
-    Float GetLineJouleHeat(Index index, Float refT) const;
-    Float GetLineVolume(Index index) const;
-    Float GetLineLength(Index index) const;
-    Float GetLineArea(Index index) const;
+    Float64 GetLineJouleHeat(Index index, Float refT) const;
+    Float64 GetLineVolume(Index index) const;
+    Float64 GetLineLength(Index index) const;
+    Float64 GetLineArea(Index index) const;
 
 protected:
     CPtr<ModelType> m_model;

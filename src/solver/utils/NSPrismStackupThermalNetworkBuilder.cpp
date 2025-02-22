@@ -89,8 +89,9 @@ void PrismStackupThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scal
             }
         }
         else if (i == nTop) {
-            Float ratio = 1.0;
+            Float64 ratio = 1.0;
             for (const auto & contact : inst.contacts.front()) {
+                NS_ASSERT(contact.ratio > 0);
                 ratio -= contact.ratio;
                 if (contact.id < i) continue;
                 nTop = contact.id;
@@ -145,8 +146,9 @@ void PrismStackupThermalNetworkBuilder<Scalar>::BuildPrismElement(const Vec<Scal
             }
         }
         else if (i == nBot) {
-            Float ratio = 1.0;
+            Float64 ratio = 1.0;
             for (const auto & contact : inst.contacts.back()) {
+                NS_ASSERT(contact.ratio > 0);
                 ratio -= contact.ratio;
                 if (contact.id < i) continue;
                 nBot = contact.id;

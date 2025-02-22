@@ -48,6 +48,7 @@ bool ThermalNetworkStaticSolver::Solve(CPtr<typename ThermalNetworkBuilder::Mode
     do {
         auto network = builder.Build(prevRes);
         NS_ASSERT(network);
+        NS_TRACE(network->msg());
         NS_TRACE("total size: %1%", network->MatrixSize());
         NS_TRACE("total joule heat: %1%w", builder.summary.jouleHeat);
         NS_TRACE("intake heat flow: %1%w", builder.summary.iHeatFlow);

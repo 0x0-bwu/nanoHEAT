@@ -270,66 +270,67 @@ FCoord2D PrismThermalNetworkBuilder<Scalar>::GetPrismCenterPoint2D(Index index) 
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismCenterDist2Side(Index index, Index ie) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismCenterDist2Side(Index index, Index ie) const
 {
-    ie %= 3;
     auto ct = GetPrismCenterPoint2D(index);
-    auto p1 = GetPrismVertexPoint2D(index, ie);
+    auto p1 = GetPrismVertexPoint2D(index, ie % 3);
     auto p2 = GetPrismVertexPoint2D(index, (ie + 1) % 3);
-    auto distSq = generic::geometry::PointLineDistanceSq(ct, p1, p2);
-    return std::sqrt(distSq) * m_model->UnitScale2Meter();
+    Float64 res = generic::geometry::PointLineDistanceSq(ct, p1, p2);
+    res = std::sqrt(res) * m_model->UnitScale2Meter();
+    NS_ASSERT(isValid(res));
+    return res;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(Index index, Index ie) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismEdgeLength(Index index, Index ie) const
 {
     ie %= 3;
     auto p1 = GetPrismVertexPoint2D(index, ie);
     auto p2 = GetPrismVertexPoint2D(index, (ie + 1) % 3);
-    auto dist = generic::geometry::Distance(p1, p2);
+    Float64 dist = generic::geometry::Distance(p1, p2);
     dist *= m_model->UnitScale2Meter();
     NS_ASSERT(dist > 0);
     return dist;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(Index index, Index ie) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismSideArea(Index index, Index ie) const
 {
-    auto area = GetPrismHeight(index);
+    Float64 area = GetPrismHeight(index);
     area *= GetPrismEdgeLength(index, ie);
     NS_ASSERT(area > 0);
     return area;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismTopBotArea(Index index) const
 {
     const auto & ps = m_model->GetPoints();
     const auto & vs = m_model->GetPrism(index).vertices;
     generic::geometry::Triangle3D<FCoord> triangle(ps.at(vs[0]), ps.at(vs[1]), ps.at(vs[2]));
-    auto area = triangle.Area();
+    Float64 area = triangle.Area();
     area *= m_model->UnitScale2Meter(2);
     NS_ASSERT(area > 0);
     return area;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismVolume(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismVolume(Index index) const
 {
     return GetPrismTopBotArea(index) * GetPrismHeight(index);
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetPrismHeight(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetPrismHeight(Index index) const
 {
     const auto & prism = m_model->GetPrism(index);
-    auto h = m_model->GetLayer(prism.layer).thickness * m_model->UnitScale2Meter();
+    Float64 h = m_model->GetLayer(prism.layer).thickness * m_model->UnitScale2Meter();
     NS_ASSERT(h > 0);
     return h;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(Index index, Float refT) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(Index index, Float refT) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     if (generic::math::EQ<Float>(line.current, 0)) return 0;
@@ -338,29 +339,29 @@ Float PrismThermalNetworkBuilder<Scalar>::GetLineJouleHeat(Index index, Float re
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineVolume(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetLineVolume(Index index) const
 {
-    auto vol = GetLineArea(index) * GetLineLength(index);
+    Float64 vol = GetLineArea(index) * GetLineLength(index);
     NS_ASSERT(vol > 0);
     return vol;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineLength(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetLineLength(Index index) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
     const auto & p1 = m_model->GetPoint(line.endPts.front());
     const auto & p2 = m_model->GetPoint(line.endPts.back());
-    auto dist = generic::geometry::Distance(p1, p2) * m_model->UnitScale2Meter();
+    Float64 dist = generic::geometry::Distance(p1, p2) * m_model->UnitScale2Meter();
     NS_ASSERT(dist > 0);
     return dist;
 }
 
 template <typename Scalar>
-Float PrismThermalNetworkBuilder<Scalar>::GetLineArea(Index index) const
+Float64 PrismThermalNetworkBuilder<Scalar>::GetLineArea(Index index) const
 {
     const auto & line = m_model->GetLineElement(m_model->LineLocalIndex(index));
-    auto area = generic::math::pi * std::pow(line.radius * m_model->UnitScale2Meter(), 2);
+    Float64 area = generic::math::pi * std::pow(line.radius * m_model->UnitScale2Meter(), 2);
     NS_ASSERT(area > 0);
     return area;
 }
