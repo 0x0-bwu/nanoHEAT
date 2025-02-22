@@ -60,6 +60,7 @@ public:
 
     void SetR(Index node1, Index node2, Scalar r)
     {
+        NS_ASSERT(isValid(r));
         r = std::max(r, MIN_R);
         if (node1 > node2) std::swap(node1, node2);
         auto & n1 = m_nodes[node1];
