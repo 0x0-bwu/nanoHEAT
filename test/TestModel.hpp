@@ -7,11 +7,11 @@
 
 #include "model/NSModel.h"
 
-using namespace nano;
 using namespace boost::unit_test;
 
 void t_build_layer_stackup_model_wolfspeed()
 {
+    using namespace nano;
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
@@ -46,6 +46,7 @@ void t_build_layer_stackup_model_wolfspeed()
 
 void t_build_prism_thermal_model_wolfspeed()
 {
+    using namespace nano;
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
@@ -112,6 +113,7 @@ void t_build_prism_thermal_model_wolfspeed()
 
 void t_build_prism_thermal_model2()
 {
+    using namespace nano;
     using namespace nano::heat;
     using namespace nano::package;
 

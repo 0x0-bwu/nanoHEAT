@@ -5,11 +5,11 @@
 #include "simulation/NSSimulationPrismThermal.h"
 #include "model/NSModel.h"
 
-using namespace nano;
 using namespace boost::unit_test;
 
 void t_prism_thermal_simulation_simple()
 {
+    using namespace nano;
     using namespace nano::package;
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/simple");
     Database::Create("simple");
@@ -96,6 +96,7 @@ void t_prism_thermal_simulation_simple()
 
 void t_prism_thermal_simulation_wolfspeed()
 {
+    using namespace nano;
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
@@ -145,7 +146,8 @@ void t_prism_thermal_simulation_wolfspeed()
 
 void t_prism_stackup_thermal_simulation_wolfspeed()
 {
-using namespace nano::heat;
+    using namespace nano;
+    using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
     auto res = Database::Load(filename, ArchiveFormat::BIN);
@@ -194,6 +196,7 @@ using namespace nano::heat;
 
 void t_prism_thermal_simulation2()
 {
+    using namespace nano;
     using namespace nano::heat;
     using namespace nano::package;
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/test");
