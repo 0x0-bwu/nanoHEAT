@@ -102,6 +102,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	if (ENABLE_APPLE_ACCELERATE)
 		add_compile_definitions(NANO_APPLE_ACCELERATE_SUPPORT)
 		message("-- Enable Apple accelerate framework")
+		add_link_options(-framework Accelerate)
 	endif()
 endif()
 
