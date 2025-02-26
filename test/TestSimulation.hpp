@@ -234,7 +234,7 @@ test_suite * create_nano_heat_simulation_test_suite()
     //
     simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation_simple));
     simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation_wolfspeed));
-    // simulation_suite->add(BOOST_TEST_CASE(&t_prism_stackup_thermal_simulation_wolfspeed));
+    simulation_suite->add(BOOST_TEST_CASE(&t_prism_stackup_thermal_simulation_wolfspeed));
     // simulation_suite->add(BOOST_TEST_CASE(&t_prism_thermal_simulation2));
     //
     return simulation_suite;
