@@ -55,7 +55,7 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
         Vec<std::string> workDirs;
         auto pool = nano::thread::Pool();
         for (Index i = 0; i < prismTemplates.size(); ++i)
-            workDirs.emplace_back(std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i));
+            workDirs.emplace_back(std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i + 1));
         for (Index i = 0; i < prismTemplates.size(); ++i)
             pool.Submit(std::bind(GenerateMesh, std::ref(layerPolygons.at(i)), std::ref(steinerPoints), std::ref(coordUnit), 
                         std::ref(meshSettings), std::ref(*prismTemplates.at(i)), workDirs.at(i).c_str()));
@@ -66,6 +66,15 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
             auto workDir = std::string(nano::CurrentDir()) + "/mesh" + std::to_string(i);
             GenerateMesh(layerPolygons.at(i), steinerPoints, coordUnit, meshSettings, *prismTemplates.at(i), workDir.c_str());
         }
+    }
+
+    // for debug
+    {
+        // for (size_t i = 0; i < prismTemplates.size(); ++i) {
+        //     auto & triangulation = *prismTemplates.at(i);
+        //     tri::TriangleEvaluator<NCoord2D> eval(triangulation);
+        //     NS_TRACE("layer %1% min edge: %2%", i + 1, eval.MinEdgeLength());
+        // }
     }
 
     for (size_t i = 0; i < stackupModel->TotalLayers(); ++i) {

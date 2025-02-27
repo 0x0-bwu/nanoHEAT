@@ -12,20 +12,21 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
                          std::string_view workDir = nano::CurrentDir())
 {
     using namespace generic::geometry;
-    if (meshSettings.dumpMeshFile) {
-        GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
-        GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
-    }
     auto minAlpha = generic::math::Rad(meshSettings.minAlpha);
     auto minLen = coordUnit.toCoord(meshSettings.minLen);
     auto maxLen = coordUnit.toCoord(meshSettings.maxLen);
     auto tolerance = coordUnit.toCoord(meshSettings.tolerance);
+    if (meshSettings.dumpMeshFile) {
+        NS_TRACE("mesh dir: %1%, minAlpha: %2%, minLen: %3%, maxLen: %4%, tolerance: %5%", workDir, minAlpha, minLen, maxLen, tolerance);
+        GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
+        GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
+    }
     mesh2d::IndexEdgeList edges;
     mesh2d::Point2DContainer points;
     mesh2d::Segment2DContainer segments, intersections;
 
-    auto hull = ConvexHull(polygons);
-    mesh2d::ExtractSegment(hull, segments);
+    auto bbox = Extent(polygons.begin(), polygons.end());
+    mesh2d::ExtractSegment(toPolygon(bbox), segments);
     mesh2d::ExtractSegments(polygons, segments);
     mesh2d::ExtractIntersections(segments, intersections);
     mesh2d::ExtractTopology(intersections, points, edges);

@@ -72,6 +72,10 @@ int main()
     auto layout = package->GetTop()->GetCell()->GetLayout().ConstCast();
     NS_ASSERT(layout);
 
+    auto bbox = layout->GetBoundary()->GetBBox();
+    const auto & coordUnit = layout->GetCoordUnit();
+    NS_TRACE("design length: %1%, width: %2%", coordUnit.toUnit(bbox.Length()), coordUnit.toUnit(bbox.Width()));
+
     detail::SetupMaterials(package);
     auto matCu = package->FindMaterial("Cu"); assert(matCu);
     auto matAir = package->FindMaterial("Air"); assert(matAir);
@@ -112,10 +116,10 @@ int main()
 
     auto & meshSettings = settings.meshSettings;
     meshSettings.minAlpha = 15;
-    meshSettings.minLen = 0.01;
-    meshSettings.maxLen = 2.00;
+    meshSettings.minLen = 1e-1;
+    meshSettings.maxLen = 10.0;
     meshSettings.tolerance = 0;
-    meshSettings.maxIter = 5e4;
+    meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
     meshSettings.preSplitEdge = true;
     auto & bcSettings = settings.bcSettings;
