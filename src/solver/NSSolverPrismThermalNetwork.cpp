@@ -122,7 +122,7 @@ Arr2<Float> PrismStackupThermalNetworkStaticSolver::Solve(Vec<Float> & temperatu
         temperatures[i] = results.at(settings.probs.at(i));
     
     if (settings.dumpHotmap) {
-        auto hotmapFile = std::string(nano::CurrentDir()) + "/hotmap.vtk";
+        auto hotmapFile = std::string(nano::CurrentDir()) + "/stackup.hotmap.vtk";
         m_model->WriteVTK<Scalar>(hotmapFile, &results);
     }
     return {minT, maxT};

@@ -70,8 +70,8 @@ void t_prism_thermal_simulation_simple()
     PrismThermalModelExtractionSettings settings;
     auto & meshSettings = settings.meshSettings;
     meshSettings.minAlpha = 15;
-    meshSettings.minLen = 0.01;
-    meshSettings.maxLen = 10.0;
+    meshSettings.minLen = 1e-1;
+    meshSettings.maxLen = 1e+1;
     meshSettings.tolerance = 0;
     meshSettings.maxIter = 0;
     meshSettings.dumpMeshFile = true;

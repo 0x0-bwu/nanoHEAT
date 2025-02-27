@@ -28,7 +28,7 @@ bool LayoutPolygonMerger::GetMergedPolygons(Index layer, Vec<CPtr<PolygonData>> 
 bool LayoutPolygonMerger::WritePNG(std::string_view dirname, size_t width) const
 {
     for (auto & [layer, merger] : m_mergers) {
-        auto filename = std::string(dirname) + "/merge_layer" + std::to_string(layer) + ".png";
+        auto filename = std::string(dirname) + "/merge_layer" + std::to_string(layer + 1) + ".png";
         if (not WritePNG(merger.get(), filename.c_str(), width)) return false;
     }
     return true;

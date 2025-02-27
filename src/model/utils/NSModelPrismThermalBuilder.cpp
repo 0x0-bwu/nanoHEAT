@@ -30,6 +30,12 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation)) return false;
     NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
+    // for debug
+    {
+    //     tri::TriangleEvaluator<NCoord2D> eval(*triangulation);
+    //     NS_TRACE("min edge: %1%", eval.MinEdgeLength());
+    }
+
     for (Index layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
         m_model.SetLayerPrismTemplate(layer, triangulation);
         PrismLayer prismLayer(layer);
