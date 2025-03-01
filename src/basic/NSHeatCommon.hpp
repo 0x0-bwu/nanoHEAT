@@ -39,6 +39,26 @@ struct ThermalBoundaryCondition
     }
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
+struct LayoutPolygonMergeSettings
+{
+    BOOST_HANA_DEFINE_STRUCT(LayoutPolygonMergeSettings,
+        (bool, checkNetDiff)
+    );
+    LayoutPolygonMergeSettings()
+    {
+        NS_INIT_HANA_STRUCT(*this);
+        checkNetDiff = false;
+    }
+#ifdef NANO_BOOST_SERIALIZATION_SUPPORT
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        NS_UNUSED(version);
+        NS_SERIALIZATION_HANA_STRUCT(ar, *this);
+    }
+#endif//NANO_BOOST_SERIALIZATION_SUPPORT
+};
 
 struct LayerStackupModelExtractionSettings
 {
@@ -47,7 +67,8 @@ struct LayerStackupModelExtractionSettings
         (bool, addCircleCenterAsSteinerPoint),
         (size_t, layerCutPrecision),
         (Float, layerTransitionRatio),
-        (Vec<FBox2D>, imprintBoxes)
+        (Vec<FBox2D>, imprintBoxes),
+        (LayoutPolygonMergeSettings, mergeSettings)
     );
     LayerStackupModelExtractionSettings()
     {

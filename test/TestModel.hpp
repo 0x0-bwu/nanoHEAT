@@ -139,6 +139,11 @@ void t_build_prism_thermal_model2()
         stackupLayer->SetDielectricMaterial(matFR4);
     }
 
+    auto psIter = package->GetPadstackIter();
+    while (auto ps = psIter.Next()) {
+        ps->SetMaterial(matCu);
+    }
+    
     auto fpCellIter = package->GetFootprintCellIter();
     while (auto fpCell = fpCellIter.Next()) {
         fpCell->SetMaterial(matSiC);

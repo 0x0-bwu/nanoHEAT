@@ -23,7 +23,7 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
 
     NS_TRACE("start merging layout polygons");
     using PolygonData = typename LayoutPolygonMerger::PolygonData;
-    LayoutPolygonMerger merger(m_layout);
+    LayoutPolygonMerger merger(m_layout, m_model->settings.mergeSettings);
     merger.Merge();
 
     if (m_model->settings.dumpPNG)
