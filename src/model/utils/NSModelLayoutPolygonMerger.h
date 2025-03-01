@@ -12,9 +12,10 @@ class LayoutPolygonMerger
 {
 public:
     using Attribute = Arr2<Index>;//net, material
+    using Settings = LayoutPolygonMergeSettings;
     using LayerMerger = generic::geometry::PolygonMerger<Attribute, NCoord>;
     using PolygonData = typename LayerMerger::PolygonData;
-    explicit LayoutPolygonMerger(CId<pkg::Layout> layout);
+    explicit LayoutPolygonMerger(CId<pkg::Layout> layout, Settings settings);
     virtual ~LayoutPolygonMerger() = default;
 
     void Merge();
@@ -30,6 +31,7 @@ private:
 
 private:
     CId<pkg::Layout> m_layout;
+    LayoutPolygonMergeSettings m_settings;
     HashMap<Index, UPtr<LayerMerger>> m_mergers;//[layer, merger]
 };
 

@@ -6,7 +6,8 @@
 
 namespace nano::heat::model::utils {
 
-LayoutPolygonMerger::LayoutPolygonMerger(CId<pkg::Layout> layout) : m_layout(layout)
+LayoutPolygonMerger::LayoutPolygonMerger(CId<pkg::Layout> layout, Settings settings)
+ : m_layout(layout), m_settings(std::move(settings))
 {
     NS_ASSERT(m_layout);
 }
@@ -39,7 +40,7 @@ void LayoutPolygonMerger::FillPolygonsFromLayout()
     Vec<CId<pkg::StackupLayer>> layers;
     auto connObjIter = m_layout->GetConnObjIter();
     while (auto connObj = connObjIter.Next()) {
-        auto net = connObj->GetNet();
+        auto net = m_settings.checkNetDiff ? connObj->GetNet() : CId<pkg::Net>();
         if (auto routingWire = connObj->GetRoutingWire(); routingWire) {
             auto layer = routingWire->GetStackupLayer();
             auto shape = routingWire->GetShape();
