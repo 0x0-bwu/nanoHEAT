@@ -91,7 +91,9 @@ void LayoutPolygonMerger::MergeLayers()
 void LayoutPolygonMerger::MergeOneLayer(Ptr<LayerMerger> merger)
 {
     typename LayerMerger::MergeSettings settings;
-    //todo, add settings
+    settings.checkPropertyDiff = m_settings.checkNetDiff;
+    settings.cleanPolygonPoints = m_settings.cleanPolygonPoints;
+    settings.cleanPointDist = m_settings.cleanPointDistance;
     merger->SetMergeSettings(settings);    
     generic::geometry::PolygonMergeRunner runner(*merger, 1);
     runner.Run();

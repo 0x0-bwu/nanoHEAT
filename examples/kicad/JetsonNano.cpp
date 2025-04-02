@@ -117,7 +117,11 @@ int main()
     }
 
     PrismThermalModelExtractionSettings settings;
-    settings.layerSettings.addCircleCenterAsSteinerPoint = true;
+
+    auto & layerSettings = settings.layerSettings;
+    layerSettings.addCircleCenterAsSteinerPoint = true;
+    layerSettings.mergeSettings.cleanPolygonPoints = true;
+    layerSettings.mergeSettings.cleanPointDistance = 1e-3;
 
     auto & meshSettings = settings.meshSettings;
     meshSettings.minAlpha = 15;
@@ -127,10 +131,12 @@ int main()
     meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
     meshSettings.preSplitEdge = true;
+    meshSettings.reportMeshQuality = true;
     auto & bcSettings = settings.bcSettings;
     bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
     bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
 
+    nano::thread::SetThreads(1);//for debug
     auto model = model::CreatePrismStackupThermalModel(layout, settings);
     assert(model);
 
@@ -139,7 +145,6 @@ int main()
         return monitors;
     };
 
-    // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.monitors = getDieMonitors();
     heat::simulation::PrismStackupThermalSimulation simulation(model.get(), setup);
