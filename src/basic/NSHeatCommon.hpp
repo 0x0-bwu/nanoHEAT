@@ -42,7 +42,9 @@ struct ThermalBoundaryCondition
 struct LayoutPolygonMergeSettings
 {
     BOOST_HANA_DEFINE_STRUCT(LayoutPolygonMergeSettings,
-        (bool, checkNetDiff)
+        (bool, checkNetDiff),
+        (bool, cleanPolygonPoints),
+        (Float, cleanPointDistance)
     );
     LayoutPolygonMergeSettings()
     {
@@ -96,6 +98,7 @@ struct PrismMeshSettings
         (bool, preSplitEdge),
         (bool, addBalancedPoints),
         (bool, imprintUpperLayer), // for prism stackup model
+        (bool, reportMeshQuality),
         (Float, minAlpha),// unit: degree
         (Float, minLen),
         (Float, maxLen),
