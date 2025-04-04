@@ -68,15 +68,6 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
         }
     }
 
-    // for debug
-    {
-        // for (size_t i = 0; i < prismTemplates.size(); ++i) {
-        //     auto & triangulation = *prismTemplates.at(i);
-        //     tri::TriangleEvaluator<NCoord2D> eval(triangulation);
-        //     NS_TRACE("layer %1% min edge: %2%", i + 1, eval.MinEdgeLength());
-        // }
-    }
-
     for (size_t i = 0; i < stackupModel->TotalLayers(); ++i) {
         m_model.SetLayerPrismTemplate(i, prismTemplates.at(layer2Template.at(i)));
         PrismLayer prismLayer(i);
@@ -145,7 +136,7 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
     }
 
     auto scaleH2Unit = coordUnit.Scale2Unit();
-    auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::Meter);
+    auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::METER);
     this->BuildPrismModel(scaleH2Unit, scale2Meter);
     this->AddBondingWires(stackupModel);
     NS_TRACE("total elements: %1%, prism: %2%, line: %3%", 

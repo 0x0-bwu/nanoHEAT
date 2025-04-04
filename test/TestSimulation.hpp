@@ -18,7 +18,7 @@ void t_prism_thermal_simulation_simple()
 
     detail::SetupMaterials(pkg);
 
-    CoordUnit coordUnit(CoordUnit::Unit::Millimeter);
+    CoordUnit coordUnit(CoordUnit::Unit::MILLIMETER);
     pkg->SetCoordUnit(coordUnit);
 
     //layers
@@ -84,7 +84,7 @@ void t_prism_thermal_simulation_simple()
 
     nano::thread::SetThreads(1);
     PrismThermalSimulationSetup setup;
-    setup.envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+    setup.envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
     setup.monitors = {FCoord3D(2.5, 2.5, 0.1)};
     heat::simulation::PrismThermalSimulation simulation(model.get(), setup);
 
@@ -134,7 +134,7 @@ void t_prism_thermal_simulation_wolfspeed()
 
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
-    setup.envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+    setup.envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
     setup.monitors = getDieMonitors();
     heat::simulation::PrismThermalSimulation simulation(&model, setup);
 
@@ -184,7 +184,7 @@ void t_prism_stackup_thermal_simulation_wolfspeed()
 
     // nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
-    setup.envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+    setup.envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
     setup.monitors = getDieMonitors();
     heat::simulation::PrismStackupThermalSimulation simulation(&model, setup);
 

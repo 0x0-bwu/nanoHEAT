@@ -127,7 +127,7 @@ int main()
     meshSettings.minAlpha = 15;
     meshSettings.minLen = 1e-1;
     meshSettings.maxLen = 10.0;
-    meshSettings.tolerance = 0;
+    meshSettings.tolerance = 1e-3;
     meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
     meshSettings.preSplitEdge = true;

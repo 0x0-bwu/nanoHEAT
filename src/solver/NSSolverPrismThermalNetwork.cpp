@@ -61,7 +61,7 @@ bool ThermalNetworkStaticSolver::Solve(CPtr<typename ThermalNetworkBuilder::Mode
         NS_TRACE("max T: %1%C", TempUnit::Kelvins2Celsius(*std::max_element(results.cbegin(), results.cend())));
     } while (residual > settings.residual && --maxIter > 0);
 
-    if (settings.envT.GetUnit() == TempUnit::Unit::Celsius)
+    if (settings.envT.GetUnit() == TempUnit::Unit::CELSIUS)
         std::for_each(results.begin(), results.end(), [](auto & t) { t = TempUnit::Kelvins2Celsius(t); });
     
     if (settings.dumpResult) {

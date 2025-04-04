@@ -40,7 +40,7 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
     if (meshSettings.addBalancedPoints)
         mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
-    // mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
+    mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
 
     if (meshSettings.dumpMeshFile) {
         NS_TRACE("writing mesh file to %1%, total triangles: %2%", workDir, triangulation.triangles.size());
@@ -48,7 +48,9 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     }
 
     if (meshSettings.reportMeshQuality) {
-        tri::TriangleEvaluator<NCoord2D> evaluator(triangulation);
+        tri::TriIdxSet skipT;
+        tri::VerIdxSet skipV;
+        tri::TriangleEvaluator<NCoord2D> evaluator(triangulation, skipT, skipV);
         auto results = evaluator.Report();
         NS_TRACE("mesh quality:");
         NS_TRACE("total nodes: %1%, total elements: %2%", results.nodes, results.elements);

@@ -30,12 +30,6 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation)) return false;
     NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
-    // for debug
-    {
-    //     tri::TriangleEvaluator<NCoord2D> eval(*triangulation);
-    //     NS_TRACE("min edge: %1%", eval.MinEdgeLength());
-    }
-
     for (Index layer = 0; layer < stackupModel->TotalLayers(); ++layer) {
         m_model.SetLayerPrismTemplate(layer, triangulation);
         PrismLayer prismLayer(layer);
@@ -115,7 +109,7 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
         }
     }
     auto scaleH2Unit = coordUnit.Scale2Unit();
-    auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::Meter);
+    auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::METER);
     m_model.BuildPrismModel(scaleH2Unit, scale2Meter);
     m_model.AddBondingWires(stackupModel);
     NS_TRACE("total elements: %1%, prism: %2%, line: %3%", 

@@ -123,10 +123,11 @@ int main()
     meshSettings.minAlpha = 15;
     meshSettings.minLen = 1.0;
     meshSettings.maxLen = 5.0;
-    meshSettings.tolerance = 0;
+    meshSettings.tolerance = 1e-3;
     meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
     meshSettings.preSplitEdge = true;
+    meshSettings.reportMeshQuality = true;
     meshSettings.imprintUpperLayer = false;
     auto & bcSettings = settings.bcSettings;
     // bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
@@ -140,7 +141,7 @@ int main()
         return monitors;
     };
 
-    // nano::thread::SetThreads(1);//for debug
+    nano::thread::SetThreads(1);//for debug
     PrismThermalSimulationSetup setup;
     setup.maxIteration = 1;
     setup.monitors = getDieMonitors();

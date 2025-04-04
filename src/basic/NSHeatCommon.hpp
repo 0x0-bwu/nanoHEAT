@@ -138,7 +138,7 @@ struct BoundaryCondtionSettings
     BoundaryCondtionSettings()
     {
         NS_INIT_HANA_STRUCT(*this);
-        envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+        envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
     }
 
     void SetTopUniformBC(BC::Type type, Float value)
@@ -200,7 +200,7 @@ struct PrismThermalSimulationSetup
     PrismThermalSimulationSetup()
     {
         NS_INIT_HANA_STRUCT(*this);
-        envTemperature = TempUnit(25, TempUnit::Unit::Celsius);
+        envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
         maxIteration = 10;
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
@@ -233,7 +233,7 @@ struct ThermalNetworkStaticSolverSettings
         dumpResult = true;
         residual = 1e-1;
         maxIter = 10;
-        envT = TempUnit(25, TempUnit::Unit::Celsius);
+        envT = TempUnit(25, TempUnit::Unit::CELSIUS);
     }
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     friend class boost::serialization::access;
