@@ -135,8 +135,8 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
         }
     }
 
-    auto scaleH2Unit = coordUnit.Scale2Unit();
-    auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::METER);
+    const auto scaleH2Unit = coordUnit.Scale2Unit();
+    const auto scale2Meter = coordUnit.toUnit(coordUnit.toCoord(1), CoordUnit::Unit::METER);
     this->BuildPrismModel(scaleH2Unit, scale2Meter);
     this->AddBondingWires(stackupModel);
     NS_TRACE("total elements: %1%, prism: %2%, line: %3%", 

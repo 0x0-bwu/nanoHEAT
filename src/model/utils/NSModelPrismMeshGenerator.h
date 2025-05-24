@@ -48,9 +48,7 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
     }
 
     if (meshSettings.reportMeshQuality) {
-        tri::TriIdxSet skipT;
-        tri::VerIdxSet skipV;
-        tri::TriangleEvaluator<NCoord2D> evaluator(triangulation, skipT, skipV);
+        tri::TriangleEvaluator<NCoord2D> evaluator(triangulation, {}, {});
         auto results = evaluator.Report();
         NS_TRACE("mesh quality:");
         NS_TRACE("total nodes: %1%, total elements: %2%", results.nodes, results.elements);
