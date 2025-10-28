@@ -253,10 +253,12 @@ void t_gmsh_mesher_helper_functions()
     BOOST_CHECK(std::filesystem::exists(geoFilePath));
     
     // Verify .geo file contains expected content
-    std::ifstream geoFile(geoFilePath);
-    std::string geoContent((std::istreambuf_iterator<char>(geoFile)),
-                           std::istreambuf_iterator<char>());
-    geoFile.close();
+    std::string geoContent;
+    {
+        std::ifstream geoFile(geoFilePath);
+        geoContent.assign((std::istreambuf_iterator<char>(geoFile)),
+                          std::istreambuf_iterator<char>());
+    }
     
     BOOST_CHECK(geoContent.find("Point(") != std::string::npos);
     BOOST_CHECK(geoContent.find("Line(") != std::string::npos);
@@ -264,6 +266,9 @@ void t_gmsh_mesher_helper_functions()
     BOOST_CHECK(geoContent.find("Plane Surface(") != std::string::npos);
     BOOST_CHECK(geoContent.find("Mesh.CharacteristicLengthMin") != std::string::npos);
     BOOST_CHECK(geoContent.find("Mesh.CharacteristicLengthMax") != std::string::npos);
+    
+    // Cleanup test directory
+    std::filesystem::remove_all(testDir);
     
     NS_TRACE("Gmsh .geo file writing test passed");
     
