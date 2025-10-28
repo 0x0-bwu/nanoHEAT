@@ -8,9 +8,10 @@
 namespace nano::heat::model::utils {
 
 using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
-inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
-                         const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
-                         std::string_view workDir = nano::CurrentDir())
+
+inline bool GenerateMeshInternal(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
+                                 const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
+                                 std::string_view workDir = nano::CurrentDir())
 {
     using namespace generic;
     using namespace generic::geometry;
@@ -58,6 +59,35 @@ inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & s
         NS_TRACE("edge length histogram: [%1%]", fmt::Fmt2Str(results.triEdgeLenHistogram, ","));
     }
     return true;
+}
+
+inline bool GenerateMeshGmsh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
+                             const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
+                             std::string_view workDir = nano::CurrentDir())
+{
+    using namespace generic;
+    using namespace generic::geometry;
+    
+    // TODO: Implement Gmsh meshing
+    NS_TRACE("Gmsh meshing not yet implemented");
+    
+    // For now, fall back to internal mesher
+    return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+}
+
+inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
+                         const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
+                         std::string_view workDir = nano::CurrentDir())
+{
+    switch (meshSettings.mesherType) {
+        case MesherType::INTERNAL_MESHER:
+            return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+        case MesherType::GMSH:
+            return GenerateMeshGmsh(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+        default:
+            NS_TRACE("Unknown mesher type, using internal mesher");
+            return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+    }
 }
 
 } // namespace nano::heat::model::utils

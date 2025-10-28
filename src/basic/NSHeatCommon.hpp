@@ -8,6 +8,8 @@ namespace nano::heat {
 
 enum class Orientation { TOP, BOT };
 
+enum class MesherType { INTERNAL_MESHER, GMSH };
+
 struct ThermalBoundaryCondition
 {
     enum class Type { HTC/*W/(m^2*K)*/, HEAT_FLUX/*W/m^2*/, TEMPERATURE/*Kelvin*/ };
@@ -94,6 +96,7 @@ struct LayerStackupModelExtractionSettings
 struct PrismMeshSettings
 {
     BOOST_HANA_DEFINE_STRUCT(PrismMeshSettings,
+        (MesherType, mesherType),
         (bool, dumpMeshFile),
         (bool, preSplitEdge),
         (bool, addBalancedPoints),
@@ -109,6 +112,7 @@ struct PrismMeshSettings
     PrismMeshSettings()
     {
         NS_INIT_HANA_STRUCT(*this);
+        mesherType = MesherType::INTERNAL_MESHER;
         minAlpha = 15;
         maxIter = 1e5;
         minLen = 1e-3;
