@@ -193,10 +193,33 @@ void t_build_prism_thermal_model2()
     Database::Shutdown();
 }
 
+void t_mesher_type_settings()
+{
+    using namespace nano;
+    using namespace nano::heat;
+    
+    // Test default mesher type
+    PrismMeshSettings defaultSettings;
+    BOOST_CHECK(defaultSettings.mesherType == MesherType::INTERNAL_MESHER);
+    
+    // Test setting to INTERNAL_MESHER explicitly
+    PrismMeshSettings internalSettings;
+    internalSettings.mesherType = MesherType::INTERNAL_MESHER;
+    BOOST_CHECK(internalSettings.mesherType == MesherType::INTERNAL_MESHER);
+    
+    // Test setting to GMSH
+    PrismMeshSettings gmshSettings;
+    gmshSettings.mesherType = MesherType::GMSH;
+    BOOST_CHECK(gmshSettings.mesherType == MesherType::GMSH);
+    
+    NS_TRACE("Mesher type test passed");
+}
+
 test_suite * create_nano_heat_model_test_suite()
 {
     test_suite * model_suite = BOOST_TEST_SUITE("s_heat_model_test");
     //
+    model_suite->add(BOOST_TEST_CASE(&t_mesher_type_settings));
     model_suite->add(BOOST_TEST_CASE(&t_build_layer_stackup_model_wolfspeed));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model_wolfspeed));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model2));
