@@ -67,6 +67,24 @@ inline bool GenerateMeshInternal(const Vec<NPolygon> & polygons, const Vec<NCoor
     return true;
 }
 
+/**
+ * @brief Write Gmsh .geo geometry input file
+ * 
+ * Converts polygons and Steiner points to Gmsh .geo format, including:
+ * - Point definitions
+ * - Line/edge definitions
+ * - Curve loops for polygon boundaries
+ * - Plane surface definitions
+ * - Mesh size parameters
+ * - Embedded Steiner points
+ * 
+ * @param polygons Input polygons to mesh
+ * @param steinerPoints Additional points to include in mesh
+ * @param coordUnit Coordinate unit for scaling
+ * @param meshSettings Mesh settings for size parameters
+ * @param geoFilePath Output .geo file path
+ * @return true if file written successfully, false otherwise
+ */
 // Helper function to write Gmsh .geo file
 inline bool WriteGmshGeoFile(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints,
                               const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings,
@@ -176,6 +194,17 @@ inline bool WriteGmshGeoFile(const Vec<NPolygon> & polygons, const Vec<NCoord2D>
     return true;
 }
 
+/**
+ * @brief Call Gmsh command-line mesher
+ * 
+ * Executes Gmsh with appropriate parameters to generate a mesh from .geo input.
+ * Uses MSH2 format for compatibility.
+ * 
+ * @param geoFilePath Input .geo geometry file path
+ * @param mshFilePath Output .msh mesh file path
+ * @param dimension Mesh dimension (2 for 2D, 3 for 3D)
+ * @return true if Gmsh executed successfully and output file exists, false otherwise
+ */
 // Helper function to call Gmsh command line tool
 inline bool CallGmshMesher(const std::string & geoFilePath, const std::string & mshFilePath, int dimension = 2)
 {
@@ -201,6 +230,20 @@ inline bool CallGmshMesher(const std::string & geoFilePath, const std::string & 
     return true;
 }
 
+/**
+ * @brief Read Gmsh .msh mesh file and convert to internal triangulation
+ * 
+ * Parses Gmsh MSH2 format file and builds internal triangulation structure:
+ * - Reads node coordinates
+ * - Reads triangle elements
+ * - Reads boundary edge elements
+ * - Builds vertex-to-triangle mapping
+ * - Builds triangle neighbor relationships
+ * 
+ * @param mshFilePath Input .msh mesh file path
+ * @param triangulation Output triangulation structure to populate
+ * @return true if file read and conversion succeeded, false otherwise
+ */
 // Helper function to read Gmsh .msh file and convert to triangulation
 inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & triangulation)
 {
@@ -363,6 +406,24 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
     return true;
 }
 
+/**
+ * @brief Generate mesh using Gmsh external mesher
+ * 
+ * This function implements mesh generation using Gmsh in three steps:
+ * 1. Convert input polygons and Steiner points to Gmsh .geo format
+ * 2. Call Gmsh command-line tool to generate the mesh
+ * 3. Read Gmsh .msh output and convert to internal triangulation structure
+ * 
+ * If any step fails, the function falls back to the internal mesher.
+ * 
+ * @param polygons Input polygons defining the mesh boundary
+ * @param steinerPoints Additional points to include in the mesh
+ * @param coordUnit Coordinate unit for scaling
+ * @param meshSettings Mesh generation settings including size parameters
+ * @param triangulation Output triangulation structure
+ * @param workDir Working directory for temporary files
+ * @return true if mesh generation succeeded, false otherwise
+ */
 inline bool GenerateMeshGmsh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
                              const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
                              std::string_view workDir = nano::CurrentDir())
