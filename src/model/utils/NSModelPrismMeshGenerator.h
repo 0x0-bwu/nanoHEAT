@@ -267,7 +267,7 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
     size_t numElements = 0;
     
     // Map from Gmsh node ID to our point index
-    std::map<size_t, size_t> gmshIdToPointIdx;
+    HashMap<size_t, size_t> gmshIdToPointIdx;
     
     while (std::getline(mshFile, line)) {
         // Trim whitespace
@@ -286,7 +286,7 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
                 std::getline(mshFile, line);
                 std::istringstream iss(line);
                 size_t nodeId;
-                NCoord2D::coor_t x, y, z;
+                NCoord x, y, z;
                 iss >> nodeId >> x >> y >> z;
                 
                 size_t pointIdx = triangulation.points.size();
@@ -365,7 +365,7 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
     
     // Build triangle neighbor relationships
     // For each triangle, find neighbors by looking for triangles that share an edge
-    using EdgeToTriMap = std::map<tri::IndexEdge, size_t>;
+    using EdgeToTriMap = generic::topology::UndirectedIndexEdgeMap<size_t>;
     EdgeToTriMap edgeToTriangle;
     
     for (size_t triIdx = 0; triIdx < triangulation.triangles.size(); ++triIdx) {

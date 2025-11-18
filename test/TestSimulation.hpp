@@ -13,7 +13,7 @@ void t_prism_thermal_simulation_simple()
     using namespace nano::package;
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/simple");
     Database::Create("simple");
-    auto pkg = nano::Create<Package>("simple");
+    auto pkg = edit::CreatePackage("simple");
     BOOST_CHECK(pkg);
 
     detail::SetupMaterials(pkg);
