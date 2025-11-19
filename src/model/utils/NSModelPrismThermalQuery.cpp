@@ -59,7 +59,7 @@ CPtr<PrismThermalModelQuery::Rtree> PrismThermalModelQuery::BuildIndexTree() con
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (nullptr == m_rtree) {
-        m_rtree.reset(new Rtree);
+        m_rtree = std::make_unique<Rtree>();
         const auto & prisms = m_model->prisms;
         const auto & triangulation = *m_model.GetLayerPrismTemplate(0);
         for (size_t i = 0; i < prisms.size(); ++i) {
