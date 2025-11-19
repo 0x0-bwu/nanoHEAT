@@ -124,6 +124,8 @@ int main()
     layerSettings.mergeSettings.cleanPointDistance = 1e-3;
 
     auto & meshSettings = settings.meshSettings;
+    // meshSettings.mesherType = MesherType::GMSH;
+    // meshSettings.mesher = "/Applications/Gmsh.app/Contents/MacOS/gmsh";
     meshSettings.minAlpha = 15;
     meshSettings.minLen = 1e-1;
     meshSettings.maxLen = 10.0;

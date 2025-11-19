@@ -97,6 +97,7 @@ struct PrismMeshSettings
 {
     BOOST_HANA_DEFINE_STRUCT(PrismMeshSettings,
         (MesherType, mesherType),
+        (std::string, mesher),
         (bool, dumpMeshFile),
         (bool, preSplitEdge),
         (bool, addBalancedPoints),

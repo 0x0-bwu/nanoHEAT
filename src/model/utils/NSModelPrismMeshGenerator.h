@@ -13,244 +13,51 @@
 
 namespace nano::heat::model::utils {
 
-using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
+using namespace generic;
+using namespace generic::geometry;
+using Edges = mesh2d::IndexEdgeList;
+using Points = mesh2d::Point2DContainer;
+using Segments = mesh2d::Segment2DContainer;
+using PrismTemplate = tri::Triangulation<NCoord2D>;
 
-inline bool GenerateMeshInternal(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
-                                 const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
-                                 std::string_view workDir = nano::CurrentDir())
+
+inline bool WriteGmshGeoFile(const Points & points, const Edges & edges, const Float minAlpha, 
+                             const NCoord minLen, const NCoord maxLen, const std::string & filename)
 {
-    using namespace generic;
-    using namespace generic::geometry;
-    auto minAlpha = math::Rad(meshSettings.minAlpha);
-    auto minLen = coordUnit.toCoord(meshSettings.minLen);
-    auto maxLen = coordUnit.toCoord(meshSettings.maxLen);
-    auto tolerance = coordUnit.toCoord(meshSettings.tolerance);
-    if (meshSettings.dumpMeshFile) {
-        NS_TRACE("mesh dir: %1%, minAlpha: %2%, minLen: %3%, maxLen: %4%, tolerance: %5%", workDir, minAlpha, minLen, maxLen, tolerance);
-        GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
-        GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
-    }
-    mesh2d::IndexEdgeList edges;
-    mesh2d::Point2DContainer points;
-    mesh2d::Segment2DContainer segments, intersections;
-
-    auto bbox = Extent(polygons.begin(), polygons.end());
-    mesh2d::ExtractSegment(toPolygon(bbox), segments);
-    mesh2d::ExtractSegments(polygons, segments);
-    mesh2d::ExtractIntersections(segments, intersections);
-    mesh2d::ExtractTopology(intersections, points, edges);
-    points.reserve(points.size() + steinerPoints.size());
-    points.insert(points.end(), steinerPoints.begin(), steinerPoints.end());
-    mesh2d::MergeClosePointsAndRemapEdge(points, edges, tolerance);
-    if (meshSettings.preSplitEdge)
-        mesh2d::SplitOverlengthEdges(points, edges, maxLen);
-    mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
-    if (meshSettings.addBalancedPoints)
-        mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
-    mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
-
-    if (meshSettings.dumpMeshFile) {
-        NS_TRACE("writing mesh file to %1%, total triangles: %2%", workDir, triangulation.triangles.size());
-        GeometryIO::WritePNG(std::string(workDir) + "/meshOut.png", triangulation, 4096);
-    }
-
-    if (meshSettings.reportMeshQuality) {
-        tri::TriangleEvaluator<NCoord2D> evaluator(triangulation, {}, {});
-        auto results = evaluator.Report();
-        NS_TRACE("mesh quality:");
-        NS_TRACE("total nodes: %1%, total elements: %2%", results.nodes, results.elements);
-        NS_TRACE("min angle: %1%, max angle: %2%", results.minAngle, results.maxAngle);
-        NS_TRACE("min edge length: %1%, max edge length: %2%", results.minEdgeLen, results.maxEdgeLen);
-        NS_TRACE("angle histogram: [%1%]", fmt::Fmt2Str(results.triAngleHistogram, ","));
-        NS_TRACE("edge length histogram: [%1%]", fmt::Fmt2Str(results.triEdgeLenHistogram, ","));
-    }
-    return true;
-}
-
-/**
- * @brief Write Gmsh .geo geometry input file
- * 
- * Converts polygons and Steiner points to Gmsh .geo format, including:
- * - Point definitions
- * - Line/edge definitions
- * - Curve loops for polygon boundaries
- * - Plane surface definitions
- * - Mesh size parameters
- * - Embedded Steiner points
- * 
- * @param polygons Input polygons to mesh
- * @param steinerPoints Additional points to include in mesh
- * @param coordUnit Coordinate unit for scaling
- * @param meshSettings Mesh settings for size parameters
- * @param geoFilePath Output .geo file path
- * @return true if file written successfully, false otherwise
- */
-// Helper function to write Gmsh .geo file
-inline bool WriteGmshGeoFile(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints,
-                              const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings,
-                              const std::string & geoFilePath)
-{
-    using namespace generic::geometry;
-    
-    std::ofstream geoFile(geoFilePath);
-    if (!geoFile.is_open()) {
-        NS_TRACE("Failed to open .geo file for writing: %1%", geoFilePath);
+    std::ofstream out(filename);
+    if (not out.is_open()) {
+        NS_TRACE("Failed to open .geo file for writing: %1%", filename);
         return false;
     }
-    
-    auto minLen = coordUnit.toCoord(meshSettings.minLen);
-    auto maxLen = coordUnit.toCoord(meshSettings.maxLen);
     
     // Write mesh size parameters
-    geoFile << "// Mesh size settings\n";
-    geoFile << "Mesh.CharacteristicLengthMin = " << minLen << ";\n";
-    geoFile << "Mesh.CharacteristicLengthMax = " << maxLen << ";\n";
-    geoFile << "Mesh.Algorithm = 6; // Frontal-Delaunay for 2D\n";
-    geoFile << "\n";
-    
-    // Extract all unique points from polygons and create a point index map
-    // Using a custom comparator for NCoord2D
-    auto pointCompare = [](const NCoord2D & a, const NCoord2D & b) {
-        if (a[0] != b[0]) return a[0] < b[0];
-        return a[1] < b[1];
-    };
-    std::map<NCoord2D, size_t, decltype(pointCompare)> pointIndexMap(pointCompare);
-    size_t pointCounter = 1; // Gmsh uses 1-based indexing
-    
-    // Helper to get or create point index
-    auto getPointIndex = [&](const NCoord2D & p) -> size_t {
-        auto it = pointIndexMap.find(p);
-        if (it != pointIndexMap.end()) {
-            return it->second;
-        }
-        size_t idx = pointCounter++;
-        pointIndexMap[p] = idx;
-        geoFile << "Point(" << idx << ") = {" << p[0] << ", " << p[1] << ", 0};\n";
-        return idx;
-    };
-    
-    // Process polygons and create lines
-    geoFile << "// Points from polygons\n";
-    Vec<Vec<size_t>> polygonLineLoops;
-    size_t lineCounter = 1;
-    
-    for (const auto & polygon : polygons) {
-        Vec<size_t> lineIds;
-        for (size_t i = 0; i < polygon.Size(); ++i) {
-            size_t j = (i + 1) % polygon.Size();
-            size_t p1 = getPointIndex(polygon[i]);
-            size_t p2 = getPointIndex(polygon[j]);
-            
-            geoFile << "Line(" << lineCounter << ") = {" << p1 << ", " << p2 << "};\n";
-            lineIds.push_back(lineCounter);
-            lineCounter++;
-        }
-        polygonLineLoops.push_back(lineIds);
+    out << "// Mesh size settings\n";
+    out << "Mesh.CharacteristicLengthMin = " << minLen << ";\n";
+    out << "Mesh.CharacteristicLengthMax = " << maxLen << ";\n";
+    out << "Mesh.Algorithm = 6; // Frontal-Delaunay for 2D\n";
+    out << "Mesh.Optimize = 1; // Optimize mesh\n";
+    out << "Mesh.OptimizeNetgen = 1;\n";
+    out << "Mesh.AngleToleranceFaceOverlap = " << minAlpha << ";\n";
+    out << "\n";
+
+    size_t index = 0;
+    for (const auto & p : points) {
+        out << "Point(" << (++index) << ") = {" << p[0] << ", " << p[1] << ", 0, " << minLen << "};\n";
     }
-    
-    // Add steiner points
-    if (!steinerPoints.empty()) {
-        geoFile << "\n// Steiner points\n";
-        for (const auto & pt : steinerPoints) {
-            getPointIndex(pt);
-        }
+    out << "\n";
+    index = 0;
+    for (const auto & e : edges) {
+        out << "Line(" << (++index) << ") = {" << (e.v1() + 1) << ", " << (e.v2() + 1) << "};\n";
     }
-    
-    // Create curve loops and plane surfaces
-    geoFile << "\n// Curve loops and surfaces\n";
-    size_t loopCounter = 1;
-    size_t surfaceCounter = 1;
-    
-    for (const auto & lineIds : polygonLineLoops) {
-        geoFile << "Curve Loop(" << loopCounter << ") = {";
-        for (size_t i = 0; i < lineIds.size(); ++i) {
-            if (i > 0) geoFile << ", ";
-            geoFile << lineIds[i];
-        }
-        geoFile << "};\n";
-        
-        geoFile << "Plane Surface(" << surfaceCounter << ") = {" << loopCounter << "};\n";
-        loopCounter++;
-        surfaceCounter++;
-    }
-    
-    // Add steiner points to the surface mesh
-    if (!steinerPoints.empty()) {
-        geoFile << "\n// Embed steiner points in surface\n";
-        geoFile << "Point{";
-        bool first = true;
-        for (const auto & pt : steinerPoints) {
-            auto it = pointIndexMap.find(pt);
-            if (it != pointIndexMap.end()) {
-                if (!first) geoFile << ", ";
-                geoFile << it->second;
-                first = false;
-            }
-        }
-        geoFile << "} In Surface{1};\n";
-    }
-    
-    geoFile.close();
+    out << "\n";
+    out.close();
     return true;
 }
 
-/**
- * @brief Call Gmsh command-line mesher
- * 
- * Executes Gmsh with appropriate parameters to generate a mesh from .geo input.
- * Uses MSH2 format for compatibility.
- * 
- * @param geoFilePath Input .geo geometry file path
- * @param mshFilePath Output .msh mesh file path
- * @param dimension Mesh dimension (2 for 2D, 3 for 3D)
- * @return true if Gmsh executed successfully and output file exists, false otherwise
- */
-// Helper function to call Gmsh command line tool
-inline bool CallGmshMesher(const std::string & geoFilePath, const std::string & mshFilePath, int dimension = 2)
-{
-    // Build the gmsh command
-    std::stringstream cmd;
-    cmd << "gmsh -" << dimension << " -format msh2 -o " << mshFilePath << " " << geoFilePath;
-    cmd << " -v 0"; // Quiet mode
-    
-    NS_TRACE("Calling Gmsh: %1%", cmd.str());
-    
-    int result = std::system(cmd.str().c_str());
-    if (result != 0) {
-        NS_TRACE("Gmsh execution failed with code: %1%", result);
-        return false;
-    }
-    
-    // Check if output file was created
-    if (!std::filesystem::exists(mshFilePath)) {
-        NS_TRACE("Gmsh output file not found: %1%", mshFilePath);
-        return false;
-    }
-    
-    return true;
-}
-
-/**
- * @brief Read Gmsh .msh mesh file and convert to internal triangulation
- * 
- * Parses Gmsh MSH2 format file and builds internal triangulation structure:
- * - Reads node coordinates
- * - Reads triangle elements
- * - Reads boundary edge elements
- * - Builds vertex-to-triangle mapping
- * - Builds triangle neighbor relationships
- * 
- * @param mshFilePath Input .msh mesh file path
- * @param triangulation Output triangulation structure to populate
- * @return true if file read and conversion succeeded, false otherwise
- */
-// Helper function to read Gmsh .msh file and convert to triangulation
 inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & triangulation)
-{
-    using namespace generic::geometry;
-    
-    std::ifstream mshFile(mshFilePath);
-    if (!mshFile.is_open()) {
+{    
+    std::ifstream in(mshFilePath);
+    if (not in.is_open()) {
         NS_TRACE("Failed to open .msh file for reading: %1%", mshFilePath);
         return false;
     }
@@ -268,8 +75,8 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
     
     // Map from Gmsh node ID to our point index
     HashMap<size_t, size_t> gmshIdToPointIdx;
-    
-    while (std::getline(mshFile, line)) {
+
+    while (std::getline(in, line)) {
         // Trim whitespace
         line.erase(0, line.find_first_not_of(" \t\r\n"));
         line.erase(line.find_last_not_of(" \t\r\n") + 1);
@@ -279,11 +86,11 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
         // Parse $Nodes section
         if (line == "$Nodes") {
             inNodes = true;
-            std::getline(mshFile, line);
+            std::getline(in, line);
             numNodes = std::stoull(line);
             
             for (size_t i = 0; i < numNodes; ++i) {
-                std::getline(mshFile, line);
+                std::getline(in, line);
                 std::istringstream iss(line);
                 size_t nodeId;
                 NCoord x, y, z;
@@ -305,11 +112,11 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
         // Parse $Elements section
         else if (line == "$Elements") {
             inElements = true;
-            std::getline(mshFile, line);
+            std::getline(in, line);
             numElements = std::stoull(line);
             
             for (size_t i = 0; i < numElements; ++i) {
-                std::getline(mshFile, line);
+                std::getline(in, line);
                 std::istringstream iss(line);
                 size_t elemId, elemType, numTags;
                 iss >> elemId >> elemType >> numTags;
@@ -360,9 +167,9 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
             inElements = false;
         }
     }
-    
-    mshFile.close();
-    
+
+    in.close();
+
     // Build triangle neighbor relationships
     // For each triangle, find neighbors by looking for triangles that share an edge
     using EdgeToTriMap = generic::topology::UndirectedIndexEdgeMap<size_t>;
@@ -406,88 +213,128 @@ inline bool ReadGmshMshFile(const std::string & mshFilePath, PrismTemplate & tri
     return true;
 }
 
-/**
- * @brief Generate mesh using Gmsh external mesher
- * 
- * This function implements mesh generation using Gmsh in three steps:
- * 1. Convert input polygons and Steiner points to Gmsh .geo format
- * 2. Call Gmsh command-line tool to generate the mesh
- * 3. Read Gmsh .msh output and convert to internal triangulation structure
- * 
- * If any step fails, the function falls back to the internal mesher.
- * 
- * @param polygons Input polygons defining the mesh boundary
- * @param steinerPoints Additional points to include in the mesh
- * @param coordUnit Coordinate unit for scaling
- * @param meshSettings Mesh generation settings including size parameters
- * @param triangulation Output triangulation structure
- * @param workDir Working directory for temporary files
- * @return true if mesh generation succeeded, false otherwise
- */
-inline bool GenerateMeshGmsh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
-                             const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
-                             std::string_view workDir = nano::CurrentDir())
+inline bool MeshPreprocess(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints,
+                           const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, 
+                           const NCoord maxLen, const NCoord tolerance, Edges & edges, Points & points)
 {
-    using namespace generic;
-    using namespace generic::geometry;
+    Segments segments, intersections;
+    auto bbox = Extent(polygons.begin(), polygons.end());
+    mesh2d::ExtractSegment(toPolygon(bbox), segments);
+    mesh2d::ExtractSegments(polygons, segments);
+    mesh2d::ExtractIntersections(segments, intersections);
+    mesh2d::ExtractTopology(intersections, points, edges);
+    points.reserve(points.size() + steinerPoints.size());
+    points.insert(points.end(), steinerPoints.begin(), steinerPoints.end());
+    if (meshSettings.addBalancedPoints)
+        mesh2d::AddPointsFromBalancedQuadTree(ConvexHull(polygons), points, 10, nano::thread::Threads());
+    mesh2d::MergeClosePointsAndRemapEdge(points, edges, tolerance);
+    if (meshSettings.preSplitEdge)
+        mesh2d::SplitOverlengthEdges(points, edges, maxLen);
+    return true;
+}
+
+
+inline bool GenerateMeshInternal(const Points & points, const Edges & edges, PrismTemplate & triangulation,
+                                 const Float minAlpha, const NCoord minLen, const NCoord maxLen, const Index maxIter)
+{
+    mesh2d::TriangulatePointsAndEdges(points, edges, triangulation);
+    mesh2d::TriangulationRefinement(triangulation, minAlpha, minLen, maxLen, maxIter);
+    return true;
+}
+inline bool GenerateMeshGmsh(const Points & points, const Edges & edges, PrismTemplate & triangulation,
+                             const Float minAlpha, const NCoord minLen, const NCoord maxLen,
+                             const PrismMeshSettings & meshSettings, std::string_view workDir)
+{
+    namespace fs = std::filesystem;
+    fs::create_directories(workDir);
+    std::string iFilename = std::string(workDir) + "/mesh.geo";
+    std::string oFilename = std::string(workDir) + "/mesh.msh";
+    if (not WriteGmshGeoFile(points, edges, minAlpha, minLen, maxLen, iFilename)) {
+        NS_TRACE("failed to write gmsh .geo file");
+        return false;
+    }  
+
+    // Build the gmsh command
+    std::string cmd = meshSettings.mesher + " -2 -format msh2 -o " + oFilename + " " + iFilename + " -v 0";
     
-    NS_TRACE("Starting Gmsh meshing");
+    NS_TRACE("Calling Gmsh: %1%", cmd);
     
-    // Step 1: Convert input data to Gmsh .geo file
-    std::string geoFilePath = std::string(workDir) + "/mesh.geo";
-    if (!WriteGmshGeoFile(polygons, steinerPoints, coordUnit, meshSettings, geoFilePath)) {
-        NS_TRACE("Failed to write Gmsh .geo file");
+    int result = std::system(cmd.c_str());
+    if (result != 0) {
+        NS_TRACE("Gmsh execution failed with code: %1%", result);
         return false;
     }
     
-    // Step 2: Call Gmsh to generate mesh
-    std::string mshFilePath = std::string(workDir) + "/mesh.msh";
-    if (!CallGmshMesher(geoFilePath, mshFilePath, 2)) {
-        NS_TRACE("Failed to call Gmsh mesher, falling back to internal mesher");
-        // Fall back to internal mesher if Gmsh is not available
-        return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+    // Check if output file was created
+    if (!std::filesystem::exists(oFilename)) {
+        NS_TRACE("Gmsh output file not found: %1%", oFilename);
+        return false;
     }
-    
-    // Step 3: Read Gmsh output and convert to internal triangulation
-    if (!ReadGmshMshFile(mshFilePath, triangulation)) {
-        NS_TRACE("Failed to read Gmsh mesh file, falling back to internal mesher");
-        return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+
+    if (not ReadGmshMshFile(oFilename, triangulation)) {
+        NS_TRACE("failed to read gmsh .msh file");
+        return false;
     }
-    
-    // Optional: Output mesh visualization
+    return true;
+}
+
+inline bool MeshPostprocess(const PrismTemplate & triangulation, const PrismMeshSettings & meshSettings, std::string_view workDir)
+{
     if (meshSettings.dumpMeshFile) {
-        NS_TRACE("Writing mesh visualization to %1%", workDir);
-        GeometryIO::WritePNG(std::string(workDir) + "/meshOutGmsh.png", triangulation, 4096);
+        NS_TRACE("writing mesh file to %1%, total triangles: %2%", workDir, triangulation.triangles.size());
+        GeometryIO::WritePNG(std::string(workDir) + "/meshOut.png", triangulation, 4096);
     }
-    
-    // Optional: Report mesh quality
+
     if (meshSettings.reportMeshQuality) {
         tri::TriangleEvaluator<NCoord2D> evaluator(triangulation, {}, {});
         auto results = evaluator.Report();
-        NS_TRACE("Gmsh mesh quality:");
+        NS_TRACE("mesh quality:");
         NS_TRACE("total nodes: %1%, total elements: %2%", results.nodes, results.elements);
         NS_TRACE("min angle: %1%, max angle: %2%", results.minAngle, results.maxAngle);
         NS_TRACE("min edge length: %1%, max edge length: %2%", results.minEdgeLen, results.maxEdgeLen);
         NS_TRACE("angle histogram: [%1%]", fmt::Fmt2Str(results.triAngleHistogram, ","));
         NS_TRACE("edge length histogram: [%1%]", fmt::Fmt2Str(results.triEdgeLenHistogram, ","));
     }
-    
     return true;
 }
 
 inline bool GenerateMesh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & steinerPoints, 
-                         const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings, PrismTemplate & triangulation,
-                         std::string_view workDir = nano::CurrentDir())
+                         const CoordUnit & coordUnit, const PrismMeshSettings & meshSettings,
+                         PrismTemplate & triangulation, std::string_view workDir)
 {
-    switch (meshSettings.mesherType) {
-        case MesherType::INTERNAL_MESHER:
-            return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
-        case MesherType::GMSH:
-            return GenerateMeshGmsh(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
-        default:
-            NS_TRACE("Unknown mesher type, using internal mesher");
-            return GenerateMeshInternal(polygons, steinerPoints, coordUnit, meshSettings, triangulation, workDir);
+    auto minAlpha = math::Rad(meshSettings.minAlpha);
+    auto minLen = coordUnit.toCoord(meshSettings.minLen);
+    auto maxLen = coordUnit.toCoord(meshSettings.maxLen);
+    auto tolerance = coordUnit.toCoord(meshSettings.tolerance);
+    if (meshSettings.dumpMeshFile) {
+        NS_TRACE("mesh dir: %1%, minAlpha: %2%, minLen: %3%, maxLen: %4%, tolerance: %5%", workDir, minAlpha, minLen, maxLen, tolerance);
+        GeometryIO::WritePNG(std::string(workDir) + "/meshIn.png", polygons.begin(), polygons.end(), 4096);
+        GeometryIO::WriteWKT<NPolygon>(std::string(workDir) + "/meshIn.wkt", polygons.begin(), polygons.end());
     }
-}
+    Edges edges; Points points;
+    if (not MeshPreprocess(polygons, steinerPoints, coordUnit, meshSettings, 
+                           maxLen, tolerance, edges, points)) {
+        NS_TRACE("mesh preprocess failed");
+        return false;
+    }
 
+    bool success = false;
+    if ( MesherType::GMSH == meshSettings.mesherType) {
+        success = GenerateMeshGmsh(points, edges, triangulation, minAlpha, minLen, maxLen, meshSettings, workDir);
+    }
+    else {
+        success = GenerateMeshInternal(points, edges, triangulation, minAlpha, minLen, maxLen, meshSettings.maxIter);
+    }
+
+    if (not success) {
+        NS_TRACE("mesh generation failed");
+        return false;
+    }
+
+    if (not MeshPostprocess(triangulation, meshSettings, workDir)) {
+        NS_TRACE("mesh postprocess failed");
+        return false;
+    }
+    return true;
+}
 } // namespace nano::heat::model::utils

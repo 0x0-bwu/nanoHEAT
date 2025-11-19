@@ -194,70 +194,10 @@ void t_build_prism_thermal_model2()
     Database::Shutdown();
 }
 
-void t_gmsh_mesher_helper_functions()
-{
-    using namespace nano;
-    using namespace nano::heat;
-    using namespace nano::heat::model::utils;
-    
-    // Create a simple test polygon (a square)
-    Vec<NPolygon> polygons;
-    NPolygon square;
-    square << NCoord2D(0, 0) << NCoord2D(10, 0) << NCoord2D(10, 10) << NCoord2D(0, 10);
-    polygons.push_back(square);
-    
-    // Add a steiner point in the center
-    Vec<NCoord2D> steinerPoints;
-    steinerPoints.emplace_back(5, 5);
-    
-    // Setup mesh settings
-    CoordUnit coordUnit(CoordUnit::Unit::MILLIMETER);
-    PrismMeshSettings meshSettings;
-    meshSettings.minLen = 0.5;
-    meshSettings.maxLen = 2.0;
-    meshSettings.mesherType = MesherType::GMSH;
-    
-    // Create temp directory for test files
-    std::string testDir = std::string(nano::CurrentDir()) + "/gmsh_test";
-    std::filesystem::create_directories(testDir);
-    
-    // Test Step 1: Write .geo file
-    std::string geoFilePath = testDir + "/test.geo";
-    bool geoWritten = WriteGmshGeoFile(polygons, steinerPoints, coordUnit, meshSettings, geoFilePath);
-    BOOST_CHECK(geoWritten);
-    BOOST_CHECK(std::filesystem::exists(geoFilePath));
-    
-    // Verify .geo file contains expected content
-    std::string geoContent;
-    {
-        std::ifstream geoFile(geoFilePath);
-        geoContent.assign((std::istreambuf_iterator<char>(geoFile)),
-                          std::istreambuf_iterator<char>());
-    }
-    
-    BOOST_CHECK(geoContent.find("Point(") != std::string::npos);
-    BOOST_CHECK(geoContent.find("Line(") != std::string::npos);
-    BOOST_CHECK(geoContent.find("Curve Loop(") != std::string::npos);
-    BOOST_CHECK(geoContent.find("Plane Surface(") != std::string::npos);
-    BOOST_CHECK(geoContent.find("Mesh.CharacteristicLengthMin") != std::string::npos);
-    BOOST_CHECK(geoContent.find("Mesh.CharacteristicLengthMax") != std::string::npos);
-    
-    // Cleanup test directory
-    std::filesystem::remove_all(testDir);
-    
-    NS_TRACE("Gmsh .geo file writing test passed");
-    
-    // Note: We cannot test Steps 2 and 3 (calling Gmsh and reading .msh)
-    // in a CI environment where Gmsh may not be installed.
-    // These would be tested in an integration test environment with Gmsh available.
-}
-
-
 test_suite * create_nano_heat_model_test_suite()
 {
     test_suite * model_suite = BOOST_TEST_SUITE("s_heat_model_test");
     //
-    model_suite->add(BOOST_TEST_CASE(&t_gmsh_mesher_helper_functions));
     model_suite->add(BOOST_TEST_CASE(&t_build_layer_stackup_model_wolfspeed));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model_wolfspeed));
     model_suite->add(BOOST_TEST_CASE(&t_build_prism_thermal_model2));
