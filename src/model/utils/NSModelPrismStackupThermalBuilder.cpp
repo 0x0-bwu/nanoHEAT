@@ -13,7 +13,7 @@ inline static constexpr auto NO_NEIGHBOR = generic::geometry::tri::noNeighbor;
 
 PrismStackupThermalModelBuilder::PrismStackupThermalModelBuilder(Ref<Model> model) : m_model(model)
 {
-    m_query.reset(new PrismStackupThermalModelQuery(m_model));
+    m_query = std::make_unique<PrismStackupThermalModelQuery>(m_model);
 }
 
 bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, Settings settings)
@@ -44,7 +44,7 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
                 polygons.insert(polygons.end(), upperLyr.begin(), upperLyr.end());
             }
             layerPolygons.emplace_back(std::move(polygons));
-            prismTemplates.emplace_back(new PrismTemplate);
+            prismTemplates.emplace_back(std::make_shared<PrismTemplate>());
         }
         layer2Template.emplace(i, prismTemplates.size() - 1);
     }

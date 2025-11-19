@@ -80,7 +80,7 @@ void LayerStackupModel::BuildLayerPolygonLUT(Float vTransitionRatio)
         for (Index layer = sLayer; layer < eLayer; ++layer) {
             auto iter = m_.layerPolygons.find(layer);
             if (iter == m_.layerPolygons.cend())
-                iter = m_.layerPolygons.emplace(layer, new PolygonIds).first;
+                iter = m_.layerPolygons.emplace(layer, std::make_shared<PolygonIds>()).first;
             iter->second->emplace_back(i);
         }
     }
