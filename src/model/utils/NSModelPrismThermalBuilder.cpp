@@ -28,7 +28,10 @@ bool PrismThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel>
     std::string_view workdir = nano::CurrentDir();
     const auto & coordUnit = layout->GetCoordUnit();
     auto triangulation = std::make_shared<typename PrismThermalModel::PrismTemplate>();
-    if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), coordUnit, meshSettings, *triangulation, workdir)) return false;
+    if (not GenerateMesh(stackupModel->GetAllPolygons(), stackupModel->GetSteinerPoints(), 
+                         coordUnit, meshSettings, *triangulation, workdir)) {
+        return false;
+    }
     NS_TRACE("total mesh elements: %1%", triangulation->triangles.size());
 
     for (Index layer = 0; layer < stackupModel->TotalLayers(); ++layer) {

@@ -111,7 +111,7 @@ int main()
         NS_ASSERT(mountingLayer);
         auto footprint = mountingLayer->GetFootprint().ConstCast();
         footprint->SetSolderMaterial(matSolder);
-        footprint->SetSolderFillingMaterial(matSolder);//wbtest todo;
+        footprint->SetSolderFillingMaterial(matSolder);
         footprint->SetSolderBallBumpThickness(0.1);
         comp->Bind<power::LossPower>(lossPower);
     }
@@ -124,11 +124,11 @@ int main()
     layerSettings.mergeSettings.cleanPointDistance = 1e-3;
 
     auto & meshSettings = settings.meshSettings;
-    // meshSettings.mesherType = MesherType::GMSH;
-    // meshSettings.mesher = "/Applications/Gmsh.app/Contents/MacOS/gmsh";
+    meshSettings.mesherType = MesherType::GMSH;
+    meshSettings.mesher = "/Applications/Gmsh.app/Contents/MacOS/gmsh";
     meshSettings.minAlpha = 15;
-    meshSettings.minLen = 1e-1;
-    meshSettings.maxLen = 10.0;
+    meshSettings.minLen = 1;
+    meshSettings.maxLen = 10;
     meshSettings.tolerance = 1e-3;
     meshSettings.maxIter = 1e4;
     meshSettings.dumpMeshFile = true;
@@ -138,7 +138,7 @@ int main()
     bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
     bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
 
-    nano::thread::SetThreads(1);//for debug
+    // nano::thread::SetThreads(1);//for debug
     auto model = model::CreatePrismStackupThermalModel(layout, settings);
     assert(model);
 
