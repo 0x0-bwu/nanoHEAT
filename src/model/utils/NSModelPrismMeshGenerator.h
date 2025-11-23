@@ -16,9 +16,9 @@ namespace nano::heat::model::utils {
 using namespace generic;
 using namespace generic::fmt;
 using namespace generic::geometry;
-using Edges = mesh2d::IndexEdgeList;
-using Points = mesh2d::Point2DContainer;
-using Segments = mesh2d::Segment2DContainer;
+using Edges = mesh2d::Edges;
+using Points = mesh2d::Points;
+using Segments = mesh2d::Segments;
 using PrismTemplate = tri::Triangulation<NCoord2D>;
 
 /**

@@ -51,8 +51,6 @@ bool GMshUtils::ReadMshFile(std::string_view filename, PrismTemplate & triangula
     triangulation.fixedEdges.clear();
     
     std::string line;
-    bool inNodes = false;
-    bool inElements = false;
     size_t numNodes = 0;
     size_t numElements = 0;
     
@@ -68,7 +66,6 @@ bool GMshUtils::ReadMshFile(std::string_view filename, PrismTemplate & triangula
         
         // Parse $Nodes section
         if (line == "$Nodes") {
-            inNodes = true;
             std::getline(in, line);
             numNodes = std::stoull(line);
             
@@ -90,11 +87,10 @@ bool GMshUtils::ReadMshFile(std::string_view filename, PrismTemplate & triangula
             }
         }
         else if (line == "$EndNodes") {
-            inNodes = false;
+            continue;
         }
         // Parse $Elements section
         else if (line == "$Elements") {
-            inElements = true;
             std::getline(in, line);
             numElements = std::stoull(line);
             
@@ -147,7 +143,7 @@ bool GMshUtils::ReadMshFile(std::string_view filename, PrismTemplate & triangula
             }
         }
         else if (line == "$EndElements") {
-            inElements = false;
+            break;
         }
     }
 
