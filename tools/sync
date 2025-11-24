@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_root="$(cd "${script_dir}/" && pwd)"
+thirdparty_dir="${project_root}/3rdparty"
+nanodb_sync="${thirdparty_dir}/nanoDB/tools/sync"
+
+echo "[sync] project root: ${project_root}"
+echo "[sync] thirdparty dir: ${thirdparty_dir}"
+
+if [[ -x "${nanodb_sync}" ]]; then
+  echo "[sync] syncing nanoDB..."
+  (cd "${thirdparty_dir}/nanoDB" && "${nanodb_sync}")
+else
+  echo "[sync] nanoDB sync script not found at ${nanodb_sync}"
+fi
+echo "[sync] done."

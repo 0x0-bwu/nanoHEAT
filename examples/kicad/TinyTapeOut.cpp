@@ -122,7 +122,7 @@ int main()
     auto & meshSettings = settings.meshSettings;
     meshSettings.mesherType = MesherType::GMSH;
     meshSettings.mesher = "/Applications/Gmsh.app/Contents/MacOS/gmsh";
-    meshSettings.minAlpha = 15;
+    meshSettings.minAlpha = generic::math::Rad(15);
     meshSettings.minLen = 1.0;
     meshSettings.maxLen = 5.0;
     meshSettings.tolerance = 1e-3;

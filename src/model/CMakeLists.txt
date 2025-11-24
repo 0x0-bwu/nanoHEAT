@@ -3,6 +3,7 @@ add_library(nanoHeatModel
     utils/NSModelLayerStackupQuery.cpp
     utils/NSModelLayoutPolygonMerger.cpp
     utils/NSModelPrismMeshGenerator.cpp
+    utils/NSModelPrismMeshGmshUtils.cpp
     utils/NSModelPrismStackupThermalBuilder.cpp
     utils/NSModelPrismStackupThermalQuery.cpp
     utils/NSModelPrismThermalBuilder.cpp

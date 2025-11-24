@@ -2,6 +2,7 @@
 #include <nano/common>
 #include "NSHeatAlias.hpp"
 
+#include "generic/math/MathUtility.hpp"
 #include <functional>
 
 namespace nano::heat {
@@ -114,7 +115,7 @@ struct PrismMeshSettings
     {
         NS_INIT_HANA_STRUCT(*this);
         mesherType = MesherType::INTERNAL_MESHER;
-        minAlpha = 15;
+        minAlpha = generic::math::Rad(15.0);
         maxIter = 1e5;
         minLen = 1e-3;
         maxLen = std::numeric_limits<Float>::max();

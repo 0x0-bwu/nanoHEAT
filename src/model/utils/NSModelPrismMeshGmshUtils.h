@@ -14,7 +14,9 @@
 
 namespace nano::heat::model::utils {
 
-using Points = Vec<NCoord2D>;
+using Point = NCoord2D;
+using Points = Vec<Point>;
+using Polygon = NPolygon;
 using Polygons = Vec<NPolygon>;
 using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
 
@@ -23,12 +25,12 @@ class GMshUtils
 public:
     struct MeshSettings
     {
-        Float minAlpha;
-        NCoord minLen;
-        NCoord maxLen;
+        Float minAlpha{0};
+        NCoord minLen{0};
+        NCoord maxLen{0};
         std::string workDir;
     };
-    static bool WriteGeoFile(const Polygons & polygons, const Points & steinerPoints, const MeshSettings & meshSettings);
+    static bool WriteGeoFile(const Polygon & outline, const Polygons & shapes, const Points & steinerPoints, const MeshSettings & meshSettings);
     static bool ReadMshFile(std::string_view filename, PrismTemplate & triangulation);
 
 

@@ -126,7 +126,7 @@ int main()
     auto & meshSettings = settings.meshSettings;
     meshSettings.mesherType = MesherType::GMSH;
     meshSettings.mesher = "/Applications/Gmsh.app/Contents/MacOS/gmsh";
-    meshSettings.minAlpha = 15;
+    meshSettings.minAlpha = generic::math::Rad(15);
     meshSettings.minLen = 1;
     meshSettings.maxLen = 10;
     meshSettings.tolerance = 1e-3;
@@ -138,7 +138,7 @@ int main()
     bcSettings.SetTopUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
     bcSettings.SetBotUniformBC(ThermalBoundaryCondition::Type::HTC, 5000);
 
-    // nano::thread::SetThreads(1);//for debug
+    nano::thread::SetThreads(1);//for debug
     auto model = model::CreatePrismStackupThermalModel(layout, settings);
     assert(model);
 

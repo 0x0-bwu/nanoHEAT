@@ -1,40 +1,103 @@
 #include "NSModelPrismMeshGmshUtils.h"
-
+#include "generic/tools/FileSystem.hpp"
 namespace nano::heat::model::utils {
 
 using namespace generic;
+using namespace generic::fs;
 using namespace generic::fmt;
 using namespace generic::geometry;
 
-bool GMshUtils::WriteGeoFile(const Polygons & polygons, const Points & steinerPoints, const MeshSettings & meshSettings)
+bool GMshUtils::WriteGeoFile(const Polygon & outline, const Polygons & shapes, const Points & steinerPoints, const MeshSettings & meshSettings)
 {
-    std::ofstream out(std::string(meshSettings.workDir) + "/mesh.geo");
-    if (not out.is_open()) {
-        NS_TRACE("Failed to open .geo file for writing: %1%", meshSettings.workDir + "/mesh.geo");
+    if (not CreateDir(meshSettings.workDir)) {
+        NS_TRACE("Failed to create mesh work directory: %1%", meshSettings.workDir);
         return false;
     }
 
+    std::string filename = meshSettings.workDir + "/mesh.geo";
+    std::ofstream out(filename);
+    if (not out.is_open()) {
+        NS_TRACE("Failed to open .geo file for writing: %1%", filename);
+        return false;
+    }
+
+    // Write mesh size parameters
     out << "General.NumThreads = 0;\n"; // Auto-detect CPU cores
-    out << "// Mesh size settings\n";
-    out << "Mesh.CharacteristicLengthMin = " << meshSettings.minLen << ";\n";
-    out << "Mesh.CharacteristicLengthMax = " << meshSettings.maxLen << ";\n";
+    if (meshSettings.minLen > 0)
+        out << "Mesh.CharacteristicLengthMin = " << meshSettings.minLen << ";\n";
+    if (meshSettings.maxLen > 0)
+        out << "Mesh.CharacteristicLengthMax = " << meshSettings.maxLen << ";\n";
     out << "Mesh.Algorithm = 6; // Frontal-Delaunay for 2D\n";
     out << "Mesh.Optimize = 1; // Optimize mesh\n";
     out << "Mesh.OptimizeNetgen = 1;\n";
     out << "\n";
 
-    Index ptIdx{0};
-    for (const auto & polygon : polygons) {
-        for (const auto & point : polygon) {
-            
+    size_t pointId{0};
+    out << "// outline points\n";
+    for (const auto & p : outline.GetPoints()) {
+        out << Fmt2Str("Point(%1%) = {%2%, %3%, 0, 1};\n", ++pointId, p[0], p[1]);
+    }
+
+    out << "\n// shape points\n";
+    for (const auto & shape : shapes) {
+        for (const auto & p : shape.GetPoints()) {
+            out << Fmt2Str("Point(%1%) = {%2%, %3%, 0, 1};\n", ++pointId, p[0], p[1]);
         }
     }
-    auto box = Extent(polygons);
-    box.Scale(1.1);
 
-    //TODO
+    out << "\n// steiner points\n";
+    size_t startSteinerId = pointId + 1;
+    for (const auto & p : steinerPoints) {
+        out << Fmt2Str("Point(%1%) = {%2%, %3%, 0, 1};\n", ++pointId, p[0], p[1]);
+    }
+    out << "\n";
 
+    Index edgeId{0};
+    for (size_t i = 0; i < outline.Size(); ++i) {
+        size_t v1 = i + 1;
+        size_t v2 = (i + 1) % outline.Size() + 1;
+        out << Fmt2Str("Line(%1%) = {%2%, %3%};\n", ++edgeId, v1, v2);
+    }
+    out << "\n";
+    out << Fmt2Str("Line Loop(1) = {");
+    for (size_t i = 0; i < outline.Size(); ++i) {
+        out << edgeId - outline.Size() + i + 1;
+        if (i < outline.Size() - 1) out << ", ";
+    }
+    out << "};\n";
+    out << "Plane Surface(1) = {1};\n";
+    out << "Physical Surface(\"domain\") = {1};\n\n";
 
+    out << "// shape edges\n";
+    pointId = outline.Size() + 1;
+    for (const auto & shape : shapes) {
+        const auto & points = shape.GetPoints();
+        for (size_t i = 0; i < points.size(); ++i) {
+            size_t v1 = pointId + i;
+            size_t v2 = pointId + (i + 1) % points.size();
+            out << Fmt2Str("Line(%1%) = {%2%, %3%};\n", ++edgeId, v1, v2);
+        }
+        pointId += points.size();
+        out << '\n';
+    }
+
+    edgeId = outline.Size();
+    for (const auto & shape : shapes) {
+        out << "Line{";
+        const auto & points = shape.GetPoints();
+        for (size_t i = 0; i < points.size(); ++i) {
+            out << ++edgeId;
+            if (i < points.size() - 1) out << ", ";
+        }
+        out << "} In Surface{1};\n";
+    }
+    
+    out << "\n// steiner points\n";
+    for (size_t i = 0; i < steinerPoints.size(); ++i) {
+        out << Fmt2Str("Point{%1%} In Surface{1};\n", startSteinerId + i);
+    }
+    out.close();
+    return true;
 }
 
 bool GMshUtils::ReadMshFile(std::string_view filename, PrismTemplate & triangulation)

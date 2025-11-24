@@ -69,7 +69,7 @@ void t_prism_thermal_simulation_simple()
     using namespace nano::heat;
     PrismThermalModelExtractionSettings settings;
     auto & meshSettings = settings.meshSettings;
-    meshSettings.minAlpha = 15;
+    meshSettings.minAlpha = generic::math::Rad(15.0);
     meshSettings.minLen = 1e-1;
     meshSettings.maxLen = 1e+1;
     meshSettings.tolerance = 0;

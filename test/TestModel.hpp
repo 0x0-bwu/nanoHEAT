@@ -70,7 +70,7 @@ void t_build_prism_thermal_model_wolfspeed()
     BOOST_CHECK(res);
     
     PrismMeshSettings meshSettings;
-    meshSettings.minAlpha = 15;
+    meshSettings.minAlpha = generic::math::Rad(15.0);
     meshSettings.minLen = 1e-1;
     meshSettings.maxLen = 3.00;
     meshSettings.tolerance = 0;
@@ -175,7 +175,7 @@ void t_build_prism_thermal_model2()
     settings.layerSettings.addCircleCenterAsSteinerPoint = true;
 
     auto & meshSettings = settings.meshSettings;
-    meshSettings.minAlpha = 15;
+    meshSettings.minAlpha = generic::math::Rad(15.0);
     meshSettings.minLen = 1e-1;
     meshSettings.maxLen = 2.00;
     meshSettings.tolerance = 0;
