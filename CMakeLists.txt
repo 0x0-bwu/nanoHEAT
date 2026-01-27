@@ -70,6 +70,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-return-std-move -Wno-nan-infinity-disabled -Wno-missing-template-arg-list-after-template-kw")
 endif()
 
+set(EXE_SUFFIX ".exe")
 set(DYLIB_SUFFIX "so")
 # MacOs
 # On macOS, add the Homebrew prefix (with appropriate suffixes) to the
@@ -81,6 +82,7 @@ set(DYLIB_SUFFIX "so")
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
   	add_definitions(-DBOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED)
+	include_directories(/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include)
 
   	find_program(HOMEBREW_EXECUTABLE brew)
   	mark_as_advanced(FORCE HOMEBREW_EXECUTABLE)
@@ -106,6 +108,17 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	endif()
 endif()
 
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+	set(EXE_SUFFIX "")
+	set(DYLIB_SUFFIX "dll")
+
+	# MinGW produces extremely large object files for template-heavy translation units; allow
+	# the assembler to emit big object files to avoid "too many sections" errors.
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
+	endif()
+endif()
+
 # Malloc
 set(NS_MALLOC_LIB "default" CACHE STRING "malloc library")
 set_property(CACHE NS_MALLOC_LIB PROPERTY STRINGS default;jemalloc;tcmalloc)
@@ -120,30 +133,18 @@ else()
 	set(MALLOC_LIB "")
 endif()
 
-# Boost library
-set(BOOST_INCLUDE_PATH $ENV{BOOST_PATH}/include)
-set(BOOST_LIBRARY_PATH $ENV{BOOST_PATH}/lib)
-
-## Ignore BOOST deprecated headers
-add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
-add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
-add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
-
-## Link boost_serialization
-#link_directories(${BOOST_LIBRARY_PATH})
-add_library(boost_serialization SHARED IMPORTED)
-set(BOOST_SERIALIZATION_LIB_PATH ${BOOST_LIBRARY_PATH}/libboost_serialization.${DYLIB_SUFFIX})
-if(NOT EXISTS ${BOOST_SERIALIZATION_LIB_PATH})
-	set(BOOST_SERIALIZATION_LIB_PATH ${BOOST_LIBRARY_PATH}/libboost_serialization-mt-x64.${DYLIB_SUFFIX})
-	if(NOT EXISTS ${BOOST_SERIALIZATION_LIB_PATH})
-		message(FATAL_ERROR "Can not find boost serialization library at ${BOOST_LIBRARY_PATH}!")
-	endif()
-endif()
-set_target_properties(boost_serialization PROPERTIES IMPORTED_LOCATION ${BOOST_SERIALIZATION_LIB_PATH})
+# Link Boost
+cmake_policy(SET CMP0167 NEW)
+set(Boost_USE_STATIC_LIBS OFF)  # Use dynamic libraries
+set(Boost_USE_MULTITHREADED ON)  # Enable multithreading
+set(Boost_USE_STATIC_RUNTIME OFF) # Use dynamic runtime
+find_package(Boost CONFIG REQUIRED COMPONENTS serialization)
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Link Eigen
 if(DEFINED ENV{EIGEN_PATH})
 	include_directories($ENV{EIGEN_PATH})
+	message(STATUS "Eigen library path: $ENV{EIGEN_PATH}")
 else()
 	find_package(Eigen3 REQUIRED)
 	include_directories(${EIGEN3_INCLUDE_DIR})
@@ -166,17 +167,21 @@ endif()
 set(THIRD_LIBRARY_PATH ${PROJECT_SOURCE_DIR}/3rdparty)
 set(NANO_DB_SRC_PATH ${THIRD_LIBRARY_PATH}/nanoDB/src)
 set(NANO_DB_INCLUDE_PATH ${THIRD_LIBRARY_PATH}/nanoDB/include)
-set(GENERIC_INCLUDE_PATH ${THIRD_LIBRARY_PATH}/generic/include)
-include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/include ${NANO_DB_INCLUDE_PATH} ${GENERIC_INCLUDE_PATH} ${BOOST_INCLUDE_PATH} ${PNG_INCLUDE_DIR})
-
-# Compile definition
-add_compile_definitions(GENERIC_BOOST_GIL_IO_PNG_SUPPORT)
-add_compile_definitions(NANO_BOOST_SERIALIZATION_SUPPORT)
+set(GENERIC_INCLUDE_PATH ${CMAKE_BINARY_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/include ${NANO_DB_INCLUDE_PATH} ${GENERIC_INCLUDE_PATH})
 
 option(BUILD_NANODB_FROM_SRC "Build db module from source" ON)
 if (BUILD_NANODB_FROM_SRC)
     include_directories(${NANO_DB_SRC_PATH})
 endif()
+
+# Compile definition
+add_compile_definitions(NANO_BOOST_SERIALIZATION_SUPPORT)
+
+## Ignore BOOST deprecated headers
+add_compile_definitions("-DBOOST_ALLOW_DEPRECATED_HEADERS")
+add_compile_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+add_compile_definitions("-DBOOST_PHOENIX_STL_TUPLE_H_")
 
 # Message
 message(STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -194,23 +199,24 @@ message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 message(STATUS "ENABLE_ASSERTION: ${ENABLE_ASSERTION}")
 message(STATUS "ENABLE_EXCEPTION: ${ENABLE_EXCEPTION}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
-message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
 # Tracting build time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
 
+add_subdirectory(${THIRD_LIBRARY_PATH}/nanoDB/3rdparty/generic)
+
 if (BUILD_NANODB_FROM_SRC)
-	add_subdirectory(3rdparty/nanoDB/src)
+	add_subdirectory(${NANO_DB_SRC_PATH})
 endif()
 add_subdirectory(src)
 
-option(BUILD_NANO_TEST "Build unit test" ON)
+option(BUILD_NANO_TEST "Build nanoHEAT test" ON)
 if (BUILD_NANO_TEST)
 	add_subdirectory(test)
 endif()
 
-option(BUILD_NANO_EXAMPLE "Build examples" ON)
-if (BUILD_NANO_EXAMPLE)
+option(BUILD_NANO_EXAMPLES "Build nanoHEAT examples" ON)
+if (BUILD_NANO_EXAMPLES)
 	add_subdirectory(examples)
 endif()

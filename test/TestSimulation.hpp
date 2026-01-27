@@ -100,13 +100,13 @@ void t_prism_thermal_simulation_wolfspeed()
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
-    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::Load(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     unsigned int version{0};
     heat::model::PrismThermalModel model;
     filename = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-    res = nano::Load(model, version, filename, ArchiveFormat::BIN);
+    res = nano::archive::Load(model, version, filename, archive::Format::BIN);
     BOOST_CHECK(res);
     BOOST_CHECK(model.GetLayout());
 
@@ -150,13 +150,13 @@ void t_prism_stackup_thermal_simulation_wolfspeed()
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
-    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::Load(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     unsigned int version{0};
     heat::model::PrismStackupThermalModel model;
     filename = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
-    res = nano::Load(model, version, filename, ArchiveFormat::BIN);
+    res = nano::archive::Load(model, version, filename, archive::Format::BIN);
     BOOST_CHECK(res);
     BOOST_CHECK(model.GetLayout());
 
@@ -202,13 +202,13 @@ void t_prism_thermal_simulation2()
     nano::SetCurrentDir(generic::fs::DirName(__FILE__).string() + "/data/package/test");
 
     auto filename = std::string(nano::CurrentDir()) + "/database.bin";
-    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::Load(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     unsigned int version{0};
     heat::model::PrismThermalModel model;
     auto modelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-    res = nano::Load(model, version, modelFile, ArchiveFormat::BIN);
+    res = nano::archive::Load(model, version, modelFile, archive::Format::BIN);
     BOOST_CHECK(res);
     BOOST_CHECK(model.GetLayout());
 

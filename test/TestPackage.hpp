@@ -1,1 +1,2 @@
-../3rdparty/nanoDB/test/TestPackage.hpp
+#pragma once
+#include "../3rdparty/nanoDB/test/TestPackage.hpp"

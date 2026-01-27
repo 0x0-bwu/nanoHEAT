@@ -4,9 +4,8 @@
 #pragma GCC diagnostic pop
 NS_SERIALIZATION_CLASS_EXPORT_IMP(nano::heat::model::LayerStackupModel)
 #include "generic/geometry/GeometryIO.hpp"
-#include <set>
+#include <nano/core/archive>
 namespace nano::heat::model {
-
 
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
     
@@ -26,15 +25,15 @@ LayerStackupModel::LayerStackupModel()
 }
 
 #ifdef NANO_BOOST_SERIALIZATION_SUPPORT
-bool LayerStackupModel::Save(std::string_view filename, ArchiveFormat fmt) const
+bool LayerStackupModel::Save(std::string_view filename, archive::Format fmt) const
 {
-    return nano::Save(*this, CURRENT_VERSION.toInt(), filename, fmt);
+    return nano::archive::Save(*this, CURRENT_VERSION.toInt(), filename, fmt);
 }
 
-bool LayerStackupModel::Load(std::string_view filename, ArchiveFormat fmt)
+bool LayerStackupModel::Load(std::string_view filename, archive::Format fmt)
 {
     unsigned int version{0};
-    return nano::Load(*this, version, filename, fmt);
+    return nano::archive::Load(*this, version, filename, fmt);
 }
 
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT

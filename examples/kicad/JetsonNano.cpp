@@ -83,18 +83,18 @@ int main()
     auto matSiC = package->FindMaterial("SiC"); assert(matSiC);
     auto matSolder = package->FindMaterial("Solder"); assert(matSolder);
 
-    auto layerIter = package->GetStackupLayerIter();
+    auto layerIter = package->GetIter<StackupLayer>();
     while (auto stackupLayer = layerIter.Next()) {
         stackupLayer->SetConductingMaterial(matCu);
         stackupLayer->SetDielectricMaterial(matFR4);
     }
 
-    auto psIter = package->GetPadstackIter();
+    auto psIter = package->GetIter<Padstack>();
     while (auto ps = psIter.Next()) {
         ps->SetMaterial(matCu);
     }
     
-    auto fpCellIter = package->GetFootprintCellIter();
+    auto fpCellIter = package->GetIter<FootprintCell>();
     while (auto fpCell = fpCellIter.Next()) {
         fpCell->SetMaterial(matSiC);
         if (0 == fpCell->GetHeight())
@@ -105,7 +105,7 @@ int main()
     Vec<Float>{TempUnit(25).inKelvins()}, Vec<Float>{5});
     auto lossPower = nano::Create<power::LossPower>("power", ScenarioId(0), powerLut);
 
-    auto compIter = layout->GetComponentIter();
+    auto compIter = layout->GetIter<Component>();
     while (auto comp = compIter.Next()) {
         auto mountingLayer = comp->GetAssemblyLayer();
         NS_ASSERT(mountingLayer);

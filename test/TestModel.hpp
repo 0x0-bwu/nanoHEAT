@@ -16,7 +16,7 @@ void t_build_layer_stackup_model_wolfspeed()
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
-    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::Load(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     auto saveChecksum = nano::test::variables[BOOST_HANA_STRING("package_checksum")];
@@ -41,7 +41,7 @@ void t_build_layer_stackup_model_wolfspeed()
     BOOST_CHECK(model);
 
     auto modelFile = std::string(nano::CurrentDir()) + "/model.stackup.bin";
-    model->Save(modelFile, ArchiveFormat::BIN);
+    model->Save(modelFile, archive::Format::BIN);
     Database::Shutdown();
 }
 
@@ -51,7 +51,7 @@ void t_build_prism_thermal_model_wolfspeed()
     using namespace nano::heat;
     using namespace nano::package;
     auto filename = generic::fs::DirName(__FILE__).string() + "/data/archive/CAS300M12BM2.nano/database.bin";
-    auto res = Database::Load(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::Load(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     auto saveChecksum = nano::test::variables[BOOST_HANA_STRING("package_checksum")];
@@ -66,7 +66,7 @@ void t_build_prism_thermal_model_wolfspeed()
 
     model::LayerStackupModel stackupModel;
     auto stackupModelFile = std::string(nano::CurrentDir()) + "/model.stackup.bin";
-    res = stackupModel.Load(stackupModelFile, ArchiveFormat::BIN);
+    res = stackupModel.Load(stackupModelFile, archive::Format::BIN);
     BOOST_CHECK(res);
     
     PrismMeshSettings meshSettings;
@@ -79,7 +79,7 @@ void t_build_prism_thermal_model_wolfspeed()
     meshSettings.imprintUpperLayer = true;
 
     Float htc = 5000;
-    BoundaryCondtionSettings bcSettings;
+    BoundaryConditionSettings bcSettings;
     bcSettings.AddBlockBC(Orientation::TOP, FBox2D({-29.35,   4.70}, {-20.35,   8.70}), ThermalBoundaryCondition::Type::HTC, htc);
     bcSettings.AddBlockBC(Orientation::TOP, FBox2D({-29.35, - 8.70}, {-20.35, - 4.70}), ThermalBoundaryCondition::Type::HTC, htc);
     bcSettings.AddBlockBC(Orientation::TOP, FBox2D({  2.75,  11.50}, {  9.75,  17.00}), ThermalBoundaryCondition::Type::HTC, htc);
@@ -96,7 +96,7 @@ void t_build_prism_thermal_model_wolfspeed()
         auto prismVtk = std::string(nano::CurrentDir()) + "/prism.vtk";
         prismModel->WriteVTK<Float>(prismVtk);
         auto prismThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-        nano::Save(*prismModel, CURRENT_VERSION.toInt(), prismThermalModelFile, ArchiveFormat::BIN);
+        nano::archive::Save(*prismModel, CURRENT_VERSION.toInt(), prismThermalModelFile, archive::Format::BIN);
     }
 
     // prism stackup model
@@ -107,7 +107,7 @@ void t_build_prism_thermal_model_wolfspeed()
         auto prismStackupVtk = std::string(nano::CurrentDir()) + "/prism_stackup.vtk";
         prismStackupModel->WriteVTK<Float>(prismStackupVtk);
         auto prismStackupThermalModelFile = std::string(nano::CurrentDir()) + "/model.prism_stackup.thermal.bin";
-        nano::Save(*prismStackupModel, CURRENT_VERSION.toInt(), prismStackupThermalModelFile, ArchiveFormat::BIN);
+        nano::archive::Save(*prismStackupModel, CURRENT_VERSION.toInt(), prismStackupThermalModelFile, archive::Format::BIN);
     }
 
     Database::Shutdown();
@@ -134,18 +134,18 @@ void t_build_prism_thermal_model2()
     auto matSiC = package->FindMaterial("SiC"); BOOST_CHECK(matSiC);
     auto matSolder = package->FindMaterial("Solder"); BOOST_CHECK(matSolder);
 
-    auto layerIter = package->GetStackupLayerIter();
+    auto layerIter = package->GetIter<StackupLayer>();
     while (auto stackupLayer = layerIter.Next()) {
         stackupLayer->SetConductingMaterial(matCu);
         stackupLayer->SetDielectricMaterial(matFR4);
     }
 
-    auto psIter = package->GetPadstackIter();
+    auto psIter = package->GetIter<Padstack>();
     while (auto ps = psIter.Next()) {
         ps->SetMaterial(matCu);
     }
     
-    auto fpCellIter = package->GetFootprintCellIter();
+    auto fpCellIter = package->GetIter<FootprintCell>();
     while (auto fpCell = fpCellIter.Next()) {
         fpCell->SetMaterial(matSiC);
         if (0 == fpCell->GetHeight())
@@ -156,7 +156,7 @@ void t_build_prism_thermal_model2()
     Vec<Float>{TempUnit(25).inKelvins(), TempUnit(125).inKelvins(), TempUnit(150).inKelvins()}, Vec<Float>{20.4, 21.7, 21.8});
     auto lossPower = nano::Create<power::LossPower>("power", ScenarioId(0), powerLut);
 
-    auto compIter = layout->GetComponentIter();
+    auto compIter = layout->GetIter<Component>();
     while (auto comp = compIter.Next()) {
         auto mountingLayer = comp->GetAssemblyLayer();
         NS_ASSERT(mountingLayer);
@@ -168,7 +168,7 @@ void t_build_prism_thermal_model2()
     }
 
     filename = std::string(nano::CurrentDir()) + "/database.bin";
-    auto res = Database::SaveCurrent(filename, ArchiveFormat::BIN);
+    auto res = nano::archive::SaveCurrent(filename, archive::Format::BIN);
     BOOST_CHECK(res);
 
     PrismThermalModelExtractionSettings settings;
@@ -190,7 +190,7 @@ void t_build_prism_thermal_model2()
     auto model = model::CreatePrismThermalModel(layout, settings);
     BOOST_CHECK(model);
     auto modelFile = std::string(nano::CurrentDir()) + "/model.prism.thermal.bin";
-    nano::Save(*model, CURRENT_VERSION.toInt(), modelFile, ArchiveFormat::BIN);
+    nano::archive::Save(*model, CURRENT_VERSION.toInt(), modelFile, archive::Format::BIN);
     Database::Shutdown();
 }
 

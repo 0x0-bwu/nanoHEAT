@@ -38,7 +38,7 @@ bool LayoutPolygonMerger::WritePNG(std::string_view dirname, size_t width) const
 void LayoutPolygonMerger::FillPolygonsFromLayout()
 {
     Vec<CId<pkg::StackupLayer>> layers;
-    auto connObjIter = m_layout->GetConnObjIter();
+    auto connObjIter = m_layout->GetCIter<pkg::ConnObj>();
     while (auto connObj = connObjIter.Next()) {
         auto net = m_settings.checkNetDiff ? connObj->GetNet() : CId<pkg::Net>();
         if (auto routingWire = connObj->GetRoutingWire(); routingWire) {

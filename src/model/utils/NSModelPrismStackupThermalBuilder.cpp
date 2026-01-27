@@ -27,7 +27,7 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, Settings setting
     return Build(layout, stackupModel.get(), settings.meshSettings, settings.bcSettings);
 }
 
-bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryConditionSettings bcSettings)
 {
     if (not layout or not stackupModel) return false;
 
@@ -76,7 +76,7 @@ bool PrismStackupThermalModelBuilder::Build(CId<Layout> layout, CPtr<LayerStacku
     }
 
     HashSet<Index> fluidMats;
-    auto matIter = layout->GetMaterialIter();
+    auto matIter = layout->GetPackage()->GetMaterialLib()->GetCIter<Material>();
     while (auto mat = matIter.Next()) {
         if (MaterialType::FLUID == mat->GetMaterialType())
             fluidMats.insert(Index(mat));

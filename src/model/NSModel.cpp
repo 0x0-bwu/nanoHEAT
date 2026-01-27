@@ -20,7 +20,7 @@ UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, Pri
     return nullptr;
 }
 
-UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+UPtr<PrismThermalModel> CreatePrismThermalModel(CId<package::Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryConditionSettings bcSettings)
 {
     auto model = std::make_unique<PrismThermalModel>();
     if (utils::PrismThermalModelBuilder(*model).Build(layout, stackupModel, std::move(meshSettings), std::move(bcSettings)))
@@ -35,7 +35,7 @@ UPtr<PrismStackupThermalModel> CreatePrismStackupThermalModel(CId<package::Layou
         return model;
     return nullptr;
 }
-UPtr<PrismStackupThermalModel> CreatePrismStackupThermalModel(CId<package::Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings)
+UPtr<PrismStackupThermalModel> CreatePrismStackupThermalModel(CId<package::Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryConditionSettings bcSettings)
 {
     auto model = std::make_unique<PrismStackupThermalModel>();
     if (utils::PrismStackupThermalModelBuilder(*model).Build(layout, stackupModel, std::move(meshSettings), std::move(bcSettings)))

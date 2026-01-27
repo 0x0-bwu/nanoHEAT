@@ -15,7 +15,7 @@ public:
     using Settings = typename Model::Settings;
     explicit PrismThermalModelBuilder(Ref<Model> model);
     bool Build(CId<Layout> layout, Settings settings);
-    bool Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryCondtionSettings bcSettings);
+    bool Build(CId<Layout> layout, CPtr<LayerStackupModel> stackupModel, PrismMeshSettings meshSettings, BoundaryConditionSettings bcSettings);
 private:
     Ref<Model> m_model;
 };

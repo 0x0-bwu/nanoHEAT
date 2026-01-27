@@ -13,6 +13,9 @@ void t_write_gmsh_geo_file()
     using namespace nano;
     using namespace generic;
     using namespace nano::heat::model::utils;
+    using nano::heat::model::utils::Point;
+    using nano::heat::model::utils::Polygon;
+    using nano::heat::model::utils::Polygons;
     Polygon outline{{{0, 0}, {5000, 0}, {5000, 5000}, {0, 5000}}};
     Polygon shape1{{{1000, 2000}, {4000, 2000}, {4000, 3000}, {1000, 3000}}};
     Polygon shape2{{{2000, 1000}, {3000, 1000}, {3000, 4000}, {2000, 4000}}};

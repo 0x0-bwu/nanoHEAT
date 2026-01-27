@@ -27,11 +27,14 @@ jobs:
       - name: Check boost library
         run: ls -al /home/runner/boost_1_83_0/boost/boost/lib
 
+      - name: Set up boost for cmake
+        run: echo "CMAKE_PREFIX_PATH=/home/runner/boost_1_83_0/boost" >> $GITHUB_ENV
+
       - name: Build nanoHEAT
-        run: export BOOST_PATH=/home/runner/boost_1_83_0/boost/boost && cmake -Bbuild -DNS_MALLOC_LIB=jemalloc -DENABLE_ASSERTION=ON -DENABLE_EXCEPTION=ON -DENABLE_ASAN=ON -G Ninja && cmake --build build
+        run: export BOOST_ROOT=/home/runner/boost_1_83_0/boost/boost && cmake -Bbuild -DNS_MALLOC_LIB=jemalloc -DENABLE_ASSERTION=ON -DENABLE_EXCEPTION=ON -DENABLE_ASAN=ON -DBUILD_NANO_TEST=ON -G Ninja && cmake --build build
 
       - name: Run unit test
-        run: build/bin/nanoTest.exe
+        run: build/bin/nano_heat_unit_test.exe
         
       - name: Create pull request
         if: success()

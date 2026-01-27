@@ -1,4 +1,4 @@
-add_library(nanoHeatModel
+add_library(nano_heat_model
     utils/NSModelLayerStackupBuilder.cpp
     utils/NSModelLayerStackupQuery.cpp
     utils/NSModelLayoutPolygonMerger.cpp
@@ -14,4 +14,4 @@ add_library(nanoHeatModel
     NSModelPrismThermal.cpp
 )
 
-target_link_libraries(nanoHeatModel nanoDB)
+target_link_libraries(nano_heat_model nano_db)

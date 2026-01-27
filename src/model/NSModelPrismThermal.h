@@ -194,7 +194,7 @@ public:
     friend class utils::PrismThermalModelQuery;
     friend class utils::PrismThermalModelBuilder;
     using Settings = PrismThermalModelExtractionSettings;
-    using BC = typename BoundaryCondtionSettings::BC;
+    using BC = typename BoundaryConditionSettings::BC;
     using BlockBC = std::pair<NBox2D, BC>;
     using PrismTemplate = generic::geometry::tri::Triangulation<NCoord2D>;
     PrismThermalModel();

@@ -31,7 +31,7 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
 
     [[maybe_unused]] bool check{false};
     Float elevation{0}, thickness{0};
-    auto layerIter = m_layout->GetStackupLayerIter();
+    auto layerIter = m_layout->GetPackage()->GetCIter<StackupLayer>();
     while (auto layer = layerIter.Next()) {
         auto dieMat = layer->GetDielectricMaterial();
         check = m_retriever->GetStackupLayerHeightThickness(layer, elevation, thickness);
@@ -48,12 +48,12 @@ bool LayerStackupModelBuilder::Build(CId<Layout> layout, Settings settings)
         }
     }
 
-    auto compIter = m_layout->GetComponentIter();
+    auto compIter = m_layout->GetCIter<Component>();
     while (auto comp = compIter.Next()) {
         AddComponent(comp);
     }
 
-    auto bondingWireIter = m_layout->GetBondingWireIter();
+    auto bondingWireIter = m_layout->GetCIter<BondingWire>();
     while (auto bondingWire = bondingWireIter.Next()) {
         auto netId = Index(bondingWire->GetNet());
         LayerStackupModel::BondingWire bw;

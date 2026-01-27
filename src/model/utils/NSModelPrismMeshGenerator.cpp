@@ -64,9 +64,14 @@ bool GenerateMeshGmsh(const Vec<NPolygon> & polygons, const Vec<NCoord2D> & stei
     
     int result = std::system(cmd.c_str());
     
+    #ifdef _WIN32
+    #define WEXITSTATUS(result) (result)
+    #endif
+
+    int exitCode = WEXITSTATUS(result);
+    
     // Detailed error information
     if (result != 0) {
-        int exitCode = WEXITSTATUS(result);
         NS_TRACE("Gmsh failed with return code: %1% (exit code: %2%)", result, exitCode);
         
         if (exitCode == 1) {

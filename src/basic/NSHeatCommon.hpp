@@ -131,17 +131,17 @@ struct PrismMeshSettings
 #endif//NANO_BOOST_SERIALIZATION_SUPPORT
 };
 
-struct BoundaryCondtionSettings
+struct BoundaryConditionSettings
 {
     using BC = ThermalBoundaryCondition;
     using BlockBC = std::pair<FBox2D, ThermalBoundaryCondition>;
     using BlockBCs = Vec<BlockBC>;
-    BOOST_HANA_DEFINE_STRUCT(BoundaryCondtionSettings,
+    BOOST_HANA_DEFINE_STRUCT(BoundaryConditionSettings,
         (Arr2<BC>, uniformBCs),//[top, bot]
         (Arr2<BlockBCs>, blockBCs),//[top, bot]
         (TempUnit, envTemperature)
     );
-    BoundaryCondtionSettings()
+    BoundaryConditionSettings()
     {
         NS_INIT_HANA_STRUCT(*this);
         envTemperature = TempUnit(25, TempUnit::Unit::CELSIUS);
@@ -177,7 +177,7 @@ struct PrismThermalModelExtractionSettings
 {
     BOOST_HANA_DEFINE_STRUCT(PrismThermalModelExtractionSettings,
         (PrismMeshSettings, meshSettings),
-        (BoundaryCondtionSettings, bcSettings),
+        (BoundaryConditionSettings, bcSettings),
         (LayerStackupModelExtractionSettings, layerSettings)
     );
 
